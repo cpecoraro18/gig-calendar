@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Calendar">
+  <!-- The source of the app icon: a calendar in the accent amber on the app's
+       own background. The PNGs in icons/ are the same mark, sized for install. -->
+  <rect width="512" height="512" rx="112" fill="#0f1216"/>
+  <g fill="#f0b429">
+    <rect x="163" y="77" width="47" height="70" rx="23"/>
+    <rect x="303" y="77" width="47" height="70" rx="23"/>
+    <rect x="81" y="124" width="350" height="307" rx="51"/>
+  </g>
+  <path d="M112 209h288v168a23 23 0 0 1-23 23H135a23 23 0 0 1-23-23z" fill="#0f1216"/>
+  <circle cx="256" cy="303" r="43" fill="#f0b429"/>
+</svg>

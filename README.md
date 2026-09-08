@@ -43,6 +43,27 @@ password, exactly as on calendar.google.com.
 The trade-off is that nothing runs while the page is closed: no notifications,
 no background sync. Everything happens when you open it.
 
+## Installing it
+
+It is a progressive web app, so it goes on the home screen and opens without
+browser chrome: on iOS, *Share* → *Add to Home Screen*; on Android, Chrome's
+menu → *Install app*.
+
+A service worker caches the shell and the hashed bundle, which is what makes a
+cold launch instant on a venue's wifi. It does not make the app work offline,
+and isn't meant to: every event comes from Google, so with no signal you get
+the sign-in screen or the app's own "couldn't load" message. A stale calendar
+would be worse than an honest empty one — the whole reason you're looking is to
+find out what is actually on.
+
+A new deploy is picked up on the next launch; the app checks for one each time
+you come back to it. It never reloads itself while you're using it, so an
+update can't appear in the middle of a half-finished event.
+
+The access token still lives in `sessionStorage`, so launching the installed
+app is a fresh session and asks you to sign in. Once you've consented that is a
+single tap with no Google prompt behind it.
+
 ## Tools
 
 A tool is a plain object in `src/tools/`, listed in `src/tools/registry.js`.

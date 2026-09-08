@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#0f1216" />
+    <meta
+      name="description"
+      content="A calendar console for your Google calendars, with the gig publisher built in."
+    />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- iOS ignores the manifest and reads these instead. black-translucent
+         puts the page behind the status bar, which is why the header and the
+         + button are already padded with the safe-area insets. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Calendar" />
+
     <title>Calendar</title>
   </head>
   <body>
