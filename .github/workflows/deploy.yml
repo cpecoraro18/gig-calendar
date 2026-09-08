@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Without this the build still succeeds and quietly publishes a site whose
+      # only screen is the "add a client ID" setup notice.
+      - name: Check the client ID is set
+        env:
+          CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        run: |
+          if [ -z "$CLIENT_ID" ]; then
+            echo "::error::GOOGLE_CLIENT_ID secret is not set."
+            exit 1
+          fi
+        shell: bash
+
+      # The client ID is public — Google only honours it on the origins listed
+      # in the Cloud console — but it is kept out of the repo so a fork or a
+      # local build can point at a different OAuth client.
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+
+      - name: Publish to gh-pages
+        run: |
+          git branch -D gh-pages || true
+          git checkout -b gh-pages
+          find . -maxdepth 1 ! -name . ! -name .git ! -name dist -exec rm -rf {} +
+          # dotglob matters: without it .nojekyll stays behind in dist/ and is
+          # deleted with it, silently dropping the file from the published site.
+          shopt -s dotglob
+          mv dist/* .
+          rm -rf dist
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add -A
+          git commit -m "Deploy"
+          git push --force origin gh-pages
+        shell: bash

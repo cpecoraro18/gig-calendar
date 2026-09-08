@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.local
+.DS_Store
+
+# Superseded design note, kept locally but never published.
+design.html
