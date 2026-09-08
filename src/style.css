@@ -1,4 +1,4 @@
-/* Dark only, on purpose: this is a tool used on a phone in a dark venue. */
+/* Dark only, on purpose: this is a tool used on a phone, often in a dark venue. */
 :root {
   --bg: #0f1216;
   --surface: #171c22;
@@ -12,10 +12,13 @@
   --accent-ink: #1a1204;
   --live: #3ecf8e;
   --live-soft: #10281f;
+  --live-line: #1d4a38;
   --warn: #e0a341;
   --warn-soft: #2b2114;
+  --warn-line: #4a3a1c;
   --danger: #e5715c;
   --danger-soft: #2c1a16;
+  --danger-line: #5a3229;
 
   --radius: 12px;
   --tap: 44px;
@@ -36,6 +39,8 @@ body {
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* No rubber-band bounce, and no pull-to-refresh reloading the page out from
+     under a half-finished event. */
   overscroll-behavior-y: none;
 }
 
@@ -45,18 +50,24 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-input,
+/* Checkboxes are excluded: the full-width, padded shape below is for the fields
+   you type into, and would blow a tick box up to the width of the sheet. */
+input:not([type='checkbox']),
 textarea,
 select {
   font: inherit;
+  /* 16px keeps iOS Safari from zooming the page when a field takes focus. */
+  font-size: 16px;
   color: var(--ink);
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.6rem 0.7rem;
   width: 100%;
+  min-height: var(--tap);
 }
 
 input:focus,
@@ -88,10 +99,6 @@ textarea {
   transition: filter 0.12s ease;
 }
 
-.btn:hover:not(:disabled) {
-  filter: brightness(1.15);
-}
-
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -109,11 +116,25 @@ textarea {
   color: var(--danger);
 }
 
+/* For the edges of a list, where a button shouldn't look like the main action. */
+.btn-quiet {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
 .btn-block {
   width: 100%;
 }
 
-/* Status chips, shared by the list rows and the panel header. */
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    filter: brightness(1.15);
+  }
+}
+
+/* Status chips, shared by the agenda rows and the event sheet. */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -130,13 +151,30 @@ textarea {
 .chip-live {
   background: var(--live-soft);
   color: var(--live);
-  border-color: #1d4a38;
+  border-color: var(--live-line);
 }
 
 .chip-warn {
   background: var(--warn-soft);
   color: var(--warn);
-  border-color: #4a3a1c;
+  border-color: var(--warn-line);
+}
+
+.chip-plain {
+  background: var(--surface-2);
+  color: var(--ink-2);
+  border-color: var(--line);
+}
+
+/* Every failure in the app renders as the same block, wherever it appears. */
+.error {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-line);
+  color: var(--danger);
+  font-size: 0.88rem;
 }
 
 .muted {

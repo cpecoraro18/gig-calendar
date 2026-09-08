@@ -2,14 +2,12 @@
  * The link between a calendar event and its published gig.
  *
  * A published gig is an ordinary event on the gigs calendar, which is what
- * keeps the website working untouched — it already reads that calendar. What
- * makes the link durable is `extendedProperties.private`: it rides along on the
- * event, comes back on every read, and needs no database. Matching on the
- * source id rather than on title and time means renaming a gig doesn't create a
- * second one.
+ * keeps chrispecmusic.com working untouched — it already reads that calendar.
+ * What makes the link durable is `extendedProperties.private`: it rides along
+ * on the event, comes back on every read, and needs no database. Matching on
+ * the source event's id rather than on title and time means renaming a gig
+ * doesn't create a second listing.
  */
-import { startOf, endOf } from './dates.js'
-
 export const SRC_EVENT_ID = 'srcEventId'
 export const SRC_CALENDAR_ID = 'srcCalendarId'
 export const SRC_HASH = 'srcHash'
@@ -26,6 +24,14 @@ function hash(text) {
   return (value >>> 0).toString(36)
 }
 
+/**
+ * A NUL byte: the one character that can't appear in a title or a venue, so no
+ * two events can be rearranged into the same fingerprint. It also has to stay
+ * exactly what the first version used — changing the separator would
+ * re-fingerprint every published gig and flag them all as changed at once.
+ */
+const SEPARATOR = String.fromCharCode(0)
+
 /** The fields whose drift is worth surfacing — the ones that reach the site. */
 export function sourceHash(event) {
   return hash(
@@ -35,7 +41,7 @@ export function sourceHash(event) {
       event.description || '',
       event.start?.dateTime || event.start?.date || '',
       event.end?.dateTime || event.end?.date || '',
-    ].join('\u0000')
+    ].join(SEPARATOR)
   )
 }
 
@@ -95,22 +101,4 @@ export function gigState(source, gig) {
   const stored = privateProps(gig)[SRC_HASH]
   if (stored && stored !== sourceHash(source)) return STATE.drifted
   return STATE.published
-}
-
-/** Whether the published listing itself was edited away from the source. */
-export function gigDiffers(source, gig) {
-  if (!gig) return false
-  return (
-    (gig.summary || '') !== (source.summary || '') ||
-    (gig.location || '') !== (source.location || '') ||
-    (gig.description || '') !== (source.description || '')
-  )
-}
-
-export function sortByStart(events) {
-  return [...events].sort((a, b) => {
-    const left = startOf(a)?.getTime() ?? 0
-    const right = startOf(b)?.getTime() ?? 0
-    return left - right || (endOf(a)?.getTime() ?? 0) - (endOf(b)?.getTime() ?? 0)
-  })
 }
