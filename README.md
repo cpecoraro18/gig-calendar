@@ -146,3 +146,8 @@ Calendar, and never from a phone.
 Invites and attendee replies, drag-to-reschedule, a week grid, notifications.
 Guests are shown as a count with a pointer at Google Calendar, which is where
 band invites arrive and where replying actually works.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE). The Google client ID is a build-time variable, so
+a fork builds against its own OAuth client and its own calendars.
