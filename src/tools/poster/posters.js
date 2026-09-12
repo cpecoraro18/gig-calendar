@@ -64,6 +64,7 @@ export const ADDRESS_MODES = [
   { id: 'none', label: 'None', hint: 'Venue name only' },
   { id: 'town', label: 'Town', hint: 'Chicago, IL' },
   { id: 'street', label: 'Street', hint: '4802 N Broadway' },
+  { id: 'mail', label: 'Street & town', hint: '4802 N Broadway, Chicago, IL' },
   { id: 'full', label: 'Full', hint: '4802 N Broadway, Chicago, IL 60640' },
 ]
 
@@ -121,6 +122,9 @@ export function formatAddress(parts, mode = DEFAULT_ADDRESS) {
   if (mode === 'none') return ''
   if (mode === 'full') return parts.full
   if (mode === 'street') return parts.street
+  // Everything you would say out loud to someone driving there, and nothing an
+  // envelope needs: no postcode, no country.
+  if (mode === 'mail') return [parts.street, parts.town].filter(Boolean).join(', ')
   // The town, falling back to the street: an address with no town in it still
   // has something worth printing.
   return parts.town || parts.street
