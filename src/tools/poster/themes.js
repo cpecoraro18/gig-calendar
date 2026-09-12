@@ -3,7 +3,7 @@
  *
  * A template here is a theme, not a layout: colours, type, a background painter
  * and a few switches the two layout engines in `render.js` read. Splitting it
- * that way is what makes sixteen of them affordable — the hard part, fitting a
+ * that way is what makes forty of them affordable — the hard part, fitting a
  * band name and five dates into a fixed rectangle, is written and debugged once,
  * and a new look is a palette and a dozen lines of background.
  *
@@ -618,6 +618,329 @@ const THEMES = [
       P.stripes(ctx, S, { angle: -0.5, step: 70, color: '#fff3e2', amount: 0.05 })
     },
   },
+  {
+    id: 'terminal',
+    name: 'Terminal',
+    pal: {
+      bg: '#020a05',
+      ink: '#4dff9b',
+      ink2: '#1f8a4d',
+      accent: '#b6ff6a',
+      accentInk: '#04160a',
+      line: 'rgba(77,255,155,0.35)',
+      panel: 'rgba(77,255,155,0.08)',
+    },
+    display: 'mono',
+    displayWeight: 700,
+    displayTracking: 0.02,
+    body: 'mono',
+    bodyWeight: 500,
+    align: 'left',
+    chip: 'outline',
+    grain: 0.1,
+    paint(ctx, S) {
+      ctx.fillStyle = '#020a05'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.blob(ctx, S.w * 0.5, S.h * 0.55, S.w * 0.95, '#0e5c2c', 0.5)
+      P.scanlines(ctx, S, { step: 5, color: '#000000', amount: 0.3 })
+      // The cursor, parked where a prompt would have left it.
+      ctx.fillStyle = '#4dff9b'
+      ctx.fillRect(S.w - 150, S.h - 128, 44, 62)
+    },
+    emphasis(ctx, S, draw) {
+      P.withGlow(ctx, '#4dff9b', 24, draw)
+    },
+  },
+  {
+    id: 'newsprint',
+    name: 'Newsprint',
+    pal: {
+      bg: '#e9e6dd',
+      ink: '#15151a',
+      ink2: '#5c5c63',
+      accent: '#15151a',
+      accentInk: '#e9e6dd',
+      line: 'rgba(21,21,26,0.45)',
+      panel: 'rgba(21,21,26,0.07)',
+    },
+    display: 'serif',
+    displayWeight: 700,
+    displayTracking: -0.005,
+    body: 'grotesk',
+    bodyWeight: 600,
+    rule: 'double',
+    grain: 0.18,
+    paint(ctx, S) {
+      ctx.fillStyle = '#e9e6dd'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.dots(ctx, S, { step: 14, r: 1.5, color: '#15151a', amount: 0.07 })
+      // A masthead rule and its hairline, above the safe area where a paper
+      // would carry the date and the price.
+      ctx.fillStyle = '#15151a'
+      ctx.fillRect(0, S.h * 0.052, S.w, 9)
+      ctx.fillRect(0, S.h * 0.052 + 15, S.w, 2)
+      ctx.fillRect(0, S.h * 0.955, S.w, 5)
+    },
+  },
+  {
+    id: 'bubblegum',
+    name: 'Bubblegum',
+    pal: {
+      bg: '#ff3f9a',
+      ink: '#fffafc',
+      ink2: '#ffd3e7',
+      accent: '#c8ff4f',
+      accentInk: '#1b3300',
+      line: 'rgba(255,255,255,0.5)',
+      panel: 'rgba(255,255,255,0.18)',
+    },
+    display: 'rounded',
+    displayWeight: 800,
+    displayTracking: -0.01,
+    body: 'rounded',
+    bodyWeight: 700,
+    radius: 30,
+    paint(ctx, S) {
+      ctx.fillStyle = P.linear(ctx, 0, 0, 0, S.h, [
+        [0, '#ff6ab4'],
+        [1, '#f01f7e'],
+      ])
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.blob(ctx, S.w * 0.15, S.h * 0.85, S.w * 0.7, '#c8ff4f', 0.4)
+      P.blob(ctx, S.w * 0.9, S.h * 0.1, S.w * 0.6, '#ffe66a', 0.35)
+      // Loose bubbles, seeded so they don't crawl about between redraws.
+      ctx.save()
+      for (let i = 0; i < 16; i += 1) {
+        ctx.globalAlpha = 0.1 + S.rng() * 0.14
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.arc(S.rng() * S.w, S.rng() * S.h, 16 + S.rng() * 70, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.restore()
+    },
+    emphasis(ctx, S, draw) {
+      P.withOffset(ctx, 0, 9, 'rgba(27,51,0,0.3)', draw)
+    },
+  },
+  {
+    id: 'swiss',
+    name: 'Swiss',
+    pal: {
+      bg: '#f2f2f0',
+      ink: '#111111',
+      ink2: '#6a6a6a',
+      accent: '#ff2d16',
+      accentInk: '#ffffff',
+      line: 'rgba(17,17,17,0.85)',
+      panel: 'rgba(17,17,17,0.06)',
+    },
+    display: 'grotesk',
+    displayWeight: 700,
+    displayCaps: false,
+    displayTracking: -0.035,
+    align: 'left',
+    chip: 'solid',
+    radius: 0,
+    paint(ctx, S) {
+      ctx.fillStyle = '#f2f2f0'
+      ctx.fillRect(0, 0, S.w, S.h)
+      // A red column down the gutter and one heavy rule: the whole grid, stated.
+      ctx.fillStyle = '#ff2d16'
+      ctx.fillRect(0, 0, 26, S.h)
+      ctx.fillStyle = '#111111'
+      ctx.fillRect(0, S.h * 0.075, S.w, 13)
+      ctx.fillRect(0, S.h * 0.945, S.w, 4)
+    },
+  },
+  {
+    id: 'gold',
+    name: 'Gold',
+    pal: {
+      bg: '#08080a',
+      ink: '#f0dfae',
+      ink2: '#8a7c58',
+      accent: '#e8c877',
+      accentInk: '#1a1405',
+      line: 'rgba(232,200,119,0.45)',
+      panel: 'rgba(232,200,119,0.08)',
+    },
+    display: 'didone',
+    displayWeight: 700,
+    displayTracking: 0.08,
+    body: 'serif',
+    chip: 'outline',
+    paint(ctx, S) {
+      ctx.fillStyle = P.linear(ctx, 0, 0, 0, S.h, [
+        [0, '#121216'],
+        [1, '#050506'],
+      ])
+      ctx.fillRect(0, 0, S.w, S.h)
+      for (const y of [S.h * 0.055, S.h * 0.945]) {
+        P.line(ctx, 90, y, S.w - 90, y, 'rgba(232,200,119,0.5)', 2)
+        P.line(ctx, 90, y + 7, S.w - 90, y + 7, 'rgba(232,200,119,0.25)', 1)
+      }
+    },
+    /**
+     * Metal is a gradient across the letterforms, not a colour. Bands of light
+     * and shade repeated down the poster so the name catches one wherever the
+     * layout happens to put it.
+     */
+    emphasis(ctx, S, draw) {
+      ctx.save()
+      ctx.fillStyle = P.linear(ctx, 0, 0, 0, S.h, [
+        [0, '#7a642f'],
+        [0.2, '#f7e8bb'],
+        [0.36, '#a98c4a'],
+        [0.52, '#fbf0cd'],
+        [0.68, '#8f7538'],
+        [0.84, '#f3e2b0'],
+        [1, '#6f5a2a'],
+      ])
+      draw()
+      ctx.restore()
+    },
+  },
+  {
+    id: 'terrazzo',
+    name: 'Terrazzo',
+    pal: {
+      bg: '#f5f2e9',
+      ink: '#1d2b24',
+      ink2: '#5d6b62',
+      accent: '#e2603f',
+      accentInk: '#fff6f2',
+      line: 'rgba(29,43,36,0.3)',
+      panel: 'rgba(29,43,36,0.07)',
+    },
+    display: 'grotesk',
+    displayWeight: 800,
+    chip: 'solid',
+    radius: 22,
+    paint(ctx, S) {
+      ctx.fillStyle = '#f5f2e9'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const chips = ['#e2603f', '#2f7d6a', '#e8b53c', '#1d2b24', '#8fb7a6']
+      ctx.save()
+      for (let i = 0; i < 150; i += 1) {
+        ctx.globalAlpha = 0.5 + S.rng() * 0.4
+        ctx.fillStyle = chips[Math.floor(S.rng() * chips.length)]
+        ctx.save()
+        ctx.translate(S.rng() * S.w, S.rng() * S.h)
+        ctx.rotate(S.rng() * Math.PI)
+        ctx.beginPath()
+        ctx.ellipse(0, 0, 6 + S.rng() * 20, 4 + S.rng() * 9, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      }
+      ctx.restore()
+      // A wash back over the chips, so type still has somewhere to sit.
+      ctx.fillStyle = 'rgba(245,242,233,0.55)'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'emboss',
+    name: 'Emboss',
+    pal: {
+      bg: '#d9d7d2',
+      ink: '#c3c1bb',
+      ink2: '#8b8982',
+      accent: '#9a968c',
+      accentInk: '#f2f1ee',
+      line: 'rgba(90,88,82,0.35)',
+      panel: 'rgba(255,255,255,0.35)',
+    },
+    display: 'grotesk',
+    displayWeight: 900,
+    displayTracking: -0.02,
+    chip: 'outline',
+    paint(ctx, S) {
+      ctx.fillStyle = P.linear(ctx, 0, 0, S.w, S.h, [
+        [0, '#e2e0db'],
+        [1, '#cdcbc5'],
+      ])
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.grain(ctx, S, 0.1)
+    },
+    /**
+     * Pressed into the paper rather than printed on it: a highlight above, a
+     * shadow below, and the letter itself barely darker than the ground.
+     */
+    emphasis(ctx, S, draw) {
+      P.withOffset(ctx, 0, 4, 'rgba(80,78,72,0.45)', () => {
+        P.withOffset(ctx, 0, -8, 'rgba(255,255,255,0.95)', draw)
+      })
+    },
+  },
+  {
+    id: 'sunbeam',
+    name: 'Sunbeam',
+    pal: {
+      bg: '#2a1206',
+      ink: '#fff4e0',
+      ink2: '#f0c08a',
+      accent: '#ffd166',
+      accentInk: '#3a1a00',
+      line: 'rgba(255,244,224,0.4)',
+      panel: 'rgba(42,18,6,0.45)',
+    },
+    display: 'condensed',
+    displayWeight: 800,
+    displayTracking: 0.01,
+    chip: 'solid',
+    paint(ctx, S) {
+      const bands = ['#7a1f12', '#c23b16', '#e8701f', '#f0a12c', '#f7c85a']
+      const h = S.h / bands.length
+      bands.forEach((color, i) => {
+        ctx.fillStyle = color
+        ctx.fillRect(0, i * h, S.w, h + 1)
+      })
+      // Softened where the bands meet, or it reads as a bar chart.
+      P.scrim(ctx, { x: 0, y: 0, w: S.w, h: S.h }, [
+        [0, 'rgba(42,18,6,0.55)'],
+        [0.5, 'rgba(42,18,6,0.2)'],
+        [1, 'rgba(42,18,6,0.6)'],
+      ])
+    },
+    emphasis(ctx, S, draw) {
+      P.withOffset(ctx, 5, 5, 'rgba(42,18,6,0.45)', draw)
+    },
+  },
+  {
+    id: 'ink',
+    name: 'Ink',
+    pal: {
+      bg: '#f2f0e9',
+      ink: '#141c2b',
+      ink2: '#4f5b70',
+      accent: '#2b4f8a',
+      accentInk: '#f2f0e9',
+      line: 'rgba(20,28,43,0.35)',
+      panel: 'rgba(20,28,43,0.06)',
+    },
+    display: 'didone',
+    displayWeight: 700,
+    displayCaps: false,
+    body: 'serif',
+    rule: 'line',
+    chip: 'outline',
+    grain: 0.12,
+    paint(ctx, S) {
+      ctx.fillStyle = '#f2f0e9'
+      ctx.fillRect(0, 0, S.w, S.h)
+      // Blooms: overlapping soft circles in one colour, which is how a wash
+      // behaves on wet paper and nothing like a gradient does.
+      ctx.save()
+      ctx.globalCompositeOperation = 'multiply'
+      for (let i = 0; i < 16; i += 1) {
+        const x = S.w * (0.1 + S.rng() * 0.85)
+        const y = S.h * (0.05 + S.rng() * 0.9)
+        P.blob(ctx, x, y, 130 + S.rng() * 260, '#2b4f8a', 0.12 + S.rng() * 0.12)
+      }
+      ctx.restore()
+    },
+  },
 ]
 
 /* ------------------------------------------------------------ with a photo */
@@ -985,6 +1308,272 @@ const PHOTO_THEMES = [
       ctx.fillRect(0, 0, inset, S.h)
       ctx.fillRect(S.w - inset, 0, inset, S.h)
       P.strokeRound(ctx, inset, inset, S.w - inset * 2, S.h - inset * 2, 0, 'rgba(29,26,22,0.35)', 2)
+    },
+  },
+  {
+    id: 'halftone',
+    name: 'Halftone',
+    photo: true,
+    pal: {
+      bg: '#fff1d6',
+      ink: '#111111',
+      ink2: '#4a4a4a',
+      accent: '#ff5a1f',
+      accentInk: '#fff1d6',
+      line: 'rgba(17,17,17,0.6)',
+      panel: 'rgba(17,17,17,0.1)',
+    },
+    display: 'condensed',
+    displayWeight: 800,
+    body: 'grotesk',
+    bodyWeight: 700,
+    align: 'left',
+    grain: 0.14,
+    well(S) {
+      const h = wellHeight(S, S.full.h * (S.mode === 'list' ? 0.4 : 0.62))
+      return { x: 0, y: 0, w: S.w, h: S.full.y + h }
+    },
+    boxFor(S) {
+      return below(S, this.well(S).h + 56)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#fff1d6'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const rect = this.well(S)
+      P.photoFill(ctx, S, rect)
+      // Newsprint reproduction: no greys, just how much black is in each cell.
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(rect.x, rect.y, rect.w, rect.h)
+      ctx.clip()
+      for (const [mode, color] of [
+        ['saturation', '#808080'],
+        ['multiply', '#ff5a1f'],
+      ]) {
+        ctx.globalCompositeOperation = mode
+        ctx.fillStyle = color
+        ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+      }
+      ctx.globalCompositeOperation = 'source-over'
+      P.dots(ctx, { w: S.w, h: rect.h, pal: S.pal }, { step: 8, r: 2.6, color: '#111111', amount: 0.3 })
+      ctx.restore()
+      ctx.fillStyle = '#111111'
+      ctx.fillRect(0, rect.h, S.w, 12)
+    },
+  },
+  {
+    id: 'slices',
+    name: 'Slices',
+    photo: true,
+    pal: {
+      bg: '#0d1117',
+      ink: '#f6f8fa',
+      ink2: '#9aa7b4',
+      accent: '#ff7a45',
+      accentInk: '#2a0e00',
+      line: 'rgba(246,248,250,0.3)',
+      panel: 'rgba(246,248,250,0.07)',
+    },
+    display: 'grotesk',
+    displayWeight: 800,
+    displayTracking: -0.01,
+    align: 'left',
+    well(S) {
+      return { x: 0, y: 0, w: S.w, h: wellHeight(S, S.full.h * (S.mode === 'list' ? 0.4 : 0.66)) + S.full.y }
+    },
+    boxFor(S) {
+      return below(S, this.well(S).h + 60)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#0d1117'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const rect = this.well(S)
+      // One photograph seen through three windows, so the bands line up into a
+      // picture rather than reading as three different crops.
+      const gap = 16
+      const bandH = (rect.h - gap * 2) / 3
+      ctx.save()
+      ctx.beginPath()
+      for (let i = 0; i < 3; i += 1) ctx.rect(0, i * (bandH + gap), S.w, bandH)
+      ctx.clip()
+      P.photoFill(ctx, S, rect)
+      ctx.restore()
+      P.line(ctx, 0, rect.h + 26, S.w, rect.h + 26, '#ff7a45', 8)
+    },
+  },
+  {
+    id: 'spotlight',
+    name: 'Spotlight',
+    photo: true,
+    pal: {
+      bg: '#151021',
+      ink: '#fdf7ff',
+      ink2: '#b4a3c8',
+      accent: '#ffc857',
+      accentInk: '#2a1c00',
+      line: 'rgba(253,247,255,0.3)',
+      panel: 'rgba(253,247,255,0.07)',
+    },
+    display: 'serif',
+    displayWeight: 700,
+    displayTracking: 0.02,
+    chip: 'outline',
+    well(S) {
+      const d = Math.min(S.full.w, wellHeight(S, S.full.h * (S.mode === 'list' ? 0.34 : 0.56)))
+      return { x: (S.w - d) / 2, y: S.full.y, w: d, h: d }
+    },
+    boxFor(S) {
+      const rect = this.well(S)
+      return below(S, rect.y + rect.h + 54)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = P.linear(ctx, 0, 0, 0, S.h, [
+        [0, '#231a38'],
+        [1, '#100c1a'],
+      ])
+      ctx.fillRect(0, 0, S.w, S.h)
+      const rect = this.well(S)
+      const r = rect.w / 2
+      P.rays(ctx, rect.x + r, rect.y + r, { count: 18, color: '#ffc857', amount: 0.06 })
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(rect.x + r, rect.y + r, r, 0, Math.PI * 2)
+      ctx.clip()
+      P.photoFill(ctx, S, rect)
+      ctx.restore()
+      ctx.strokeStyle = 'rgba(255,200,87,0.7)'
+      ctx.lineWidth = 5
+      ctx.beginPath()
+      ctx.arc(rect.x + r, rect.y + r, r, 0, Math.PI * 2)
+      ctx.stroke()
+    },
+  },
+  {
+    id: 'card',
+    name: 'Card',
+    photo: true,
+    pal: {
+      bg: '#0a0f14',
+      ink: '#ffffff',
+      ink2: '#c2ced9',
+      accent: '#6ee7b7',
+      accentInk: '#04231a',
+      line: 'rgba(255,255,255,0.35)',
+      panel: 'rgba(12,18,24,0.62)',
+    },
+    display: 'rounded',
+    displayWeight: 800,
+    displayCaps: false,
+    displayTracking: -0.015,
+    body: 'rounded',
+    radius: 24,
+    boxFor: (S) => lower(S, S.mode === 'list' ? 0.7 : 0.5),
+    paint(ctx, S) {
+      const full = { x: 0, y: 0, w: S.w, h: S.h }
+      ctx.fillStyle = '#0a0f14'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, full)
+      P.scrim(ctx, full, [
+        [0, 'rgba(10,15,20,0.1)'],
+        [1, 'rgba(10,15,20,0.6)'],
+      ])
+      /* A panel with a hard edge rather than a gradient: the picture stays a
+         picture right up to the line, and the words sit on something solid. */
+      const pad = 40
+      const card = {
+        x: Math.max(S.box.x - pad, 26),
+        y: Math.max(S.box.y - pad, 26),
+      }
+      card.w = S.w - card.x * 2
+      card.h = S.h - card.y - Math.max(S.h - (S.box.y + S.box.h) - pad, 26)
+      P.fillRound(ctx, card.x, card.y, card.w, card.h, 34, 'rgba(10,15,20,0.72)')
+      P.strokeRound(ctx, card.x, card.y, card.w, card.h, 34, 'rgba(255,255,255,0.18)', 2)
+    },
+  },
+  {
+    id: 'wedge',
+    name: 'Wedge',
+    photo: true,
+    pal: {
+      bg: '#101010',
+      ink: '#fafafa',
+      ink2: '#a0a0a0',
+      accent: '#d7ff3e',
+      accentInk: '#1b2200',
+      line: 'rgba(250,250,250,0.3)',
+      panel: 'rgba(250,250,250,0.07)',
+    },
+    display: 'condensed',
+    displayWeight: 800,
+    align: 'left',
+    chip: 'solid',
+    well(S) {
+      return { x: 0, y: 0, w: S.w, h: wellHeight(S, S.full.h * (S.mode === 'list' ? 0.4 : 0.6)) + S.full.y }
+    },
+    boxFor(S) {
+      // Below the low corner of the diagonal, or the type sits in the slope.
+      return below(S, this.well(S).h + 64)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#101010'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const rect = this.well(S)
+      const rise = rect.h * 0.16
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(0, 0)
+      ctx.lineTo(S.w, 0)
+      ctx.lineTo(S.w, rect.h - rise)
+      ctx.lineTo(0, rect.h)
+      ctx.closePath()
+      ctx.clip()
+      P.photoFill(ctx, S, rect)
+      ctx.restore()
+      ctx.strokeStyle = '#d7ff3e'
+      ctx.lineWidth = 9
+      ctx.beginPath()
+      ctx.moveTo(0, rect.h)
+      ctx.lineTo(S.w, rect.h - rise)
+      ctx.stroke()
+    },
+  },
+  {
+    id: 'column',
+    name: 'Column',
+    photo: true,
+    pal: {
+      bg: '#1a1f1c',
+      ink: '#f4f7f2',
+      ink2: '#a3b0a6',
+      accent: '#ffb648',
+      accentInk: '#2a1800',
+      line: 'rgba(244,247,242,0.3)',
+      panel: 'rgba(244,247,242,0.07)',
+    },
+    display: 'condensed',
+    displayWeight: 800,
+    align: 'left',
+    chip: 'solid',
+    /**
+     * The only composition here that is side by side. A list can't use it — nine
+     * rows in 56% of the width would be nine ellipses — so in list mode it falls
+     * back to a band and behaves like the others.
+     */
+    boxFor(S) {
+      if (S.mode === 'list') return below(S, S.h * 0.3 + 64)
+      return { x: S.full.x, y: S.full.y, w: S.full.w * 0.56, h: S.full.h }
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#1a1f1c'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const rect =
+        S.mode === 'list'
+          ? { x: 0, y: 0, w: S.w, h: S.h * 0.3 }
+          : { x: S.w * 0.63, y: 0, w: S.w * 0.37, h: S.h }
+      P.photoFill(ctx, S, rect)
+      ctx.fillStyle = '#ffb648'
+      if (S.mode === 'list') ctx.fillRect(0, rect.h, S.w, 9)
+      else ctx.fillRect(rect.x - 9, 0, 9, S.h)
     },
   },
 ]
