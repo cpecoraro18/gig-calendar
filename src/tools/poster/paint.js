@@ -252,6 +252,101 @@ export function dottedLine(ctx, x0, y, x1, style, dot = 6, gap = 18) {
   }
 }
 
+/* -------------------------------------------------------------------- photos */
+
+/**
+ * Fill a rect with an image, cropping whatever doesn't fit rather than squashing
+ * it. `focus` decides what survives the crop — 0 keeps the top of the frame, 1
+ * the bottom — because a phone photo cropped to 9:16 takes someone's head off
+ * about half the time, and which half is a judgement only the user can make.
+ */
+export function cover(ctx, img, rect, focus = 0.5) {
+  const scale = Math.max(rect.w / img.width, rect.h / img.height)
+  const w = img.width * scale
+  const h = img.height * scale
+  ctx.drawImage(img, rect.x + (rect.w - w) / 2, rect.y + (rect.h - h) * focus, w, h)
+}
+
+/**
+ * The photo, or something deliberate in its place. A photo style has to read in
+ * the picker before there is a photo, or half the strip is grey rectangles.
+ */
+export function photoFill(ctx, S, rect, { radius = 0, fade = 1, ground } = {}) {
+  ctx.save()
+  roundRect(ctx, rect.x, rect.y, rect.w, rect.h, radius)
+  ctx.clip()
+  if (S.photo) {
+    ctx.globalAlpha = fade
+    cover(ctx, S.photo, rect, S.focus)
+  } else {
+    const stops = ground || [
+      [0, alpha(S.pal.accent, 0.5)],
+      [1, alpha(S.pal.ink2, 0.25)],
+    ]
+    ctx.fillStyle = linear(ctx, rect.x, rect.y, rect.x + rect.w, rect.y + rect.h, stops)
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+    // A diagonal, so an empty photo well reads as a place for one rather than
+    // as a colour the designer chose.
+    ctx.globalAlpha = 0.16
+    ctx.strokeStyle = S.pal.ink
+    ctx.lineWidth = Math.max(rect.w, rect.h) * 0.02
+    ctx.beginPath()
+    ctx.moveTo(rect.x, rect.y + rect.h)
+    ctx.lineTo(rect.x + rect.w, rect.y)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+/**
+ * Two-colour photography: desaturate, push the highlights toward `light` and
+ * lift the blacks toward `dark`. Applied over whatever is already in the rect,
+ * so the caller draws the photo first.
+ */
+export function duotone(ctx, rect, dark, light, radius = 0) {
+  ctx.save()
+  roundRect(ctx, rect.x, rect.y, rect.w, rect.h, radius)
+  ctx.clip()
+  for (const [mode, color] of [
+    ['saturation', '#808080'],
+    ['multiply', light],
+    ['screen', dark],
+  ]) {
+    ctx.globalCompositeOperation = mode
+    ctx.fillStyle = color
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+  }
+  ctx.restore()
+}
+
+/**
+ * The gradient between a photograph and legible text. Without one, white type
+ * over a bright sky is simply gone.
+ */
+export function scrim(ctx, rect, stops, horizontal = false) {
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(rect.x, rect.y, rect.w, rect.h)
+  ctx.clip()
+  ctx.fillStyle = horizontal
+    ? linear(ctx, rect.x, rect.y, rect.x + rect.w, rect.y, stops)
+    : linear(ctx, rect.x, rect.y, rect.x, rect.y + rect.h, stops)
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+  ctx.restore()
+}
+
+/** The perforated edges of 35mm film, top and bottom of a frame. */
+export function filmEdge(ctx, rect, color) {
+  ctx.save()
+  ctx.fillStyle = color
+  const pitch = 46
+  for (let x = rect.x + 8; x < rect.x + rect.w - 24; x += pitch) {
+    ctx.fillRect(x, rect.y + 12, 26, 20)
+    ctx.fillRect(x, rect.y + rect.h - 32, 26, 20)
+  }
+  ctx.restore()
+}
+
 /* ----------------------------------------------------------------- ornaments */
 
 let grainTile = null

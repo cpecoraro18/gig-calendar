@@ -620,9 +620,379 @@ const THEMES = [
   },
 ]
 
+/* ------------------------------------------------------------ with a photo */
+
+/**
+ * A photo changes where the words can go, so these themes move the text box as
+ * well as painting the background. `boxFor` returns the area the layout engines
+ * are allowed to use; everything outside it belongs to the picture.
+ *
+ * The two layouts want very different things from a photograph. One gig can sit
+ * over a full-bleed image with a gradient under the type. Nine rows cannot —
+ * they need a solid ground — so most of these put the photo in a band at the top
+ * when the post is a list, and `S.mode` is how a theme tells the difference.
+ */
+
+/**
+ * The safe area below `y`. It never runs past the bottom of the safe area — if
+ * the picture has been greedy the box climbs back up into it, because type that
+ * has fallen off the poster is worse than a photo with something over it.
+ */
+function below(S, y, min = S.mode === 'list' ? 640 : 560) {
+  const bottom = S.full.y + S.full.h
+  const top = Math.max(Math.min(Math.max(y, S.full.y), bottom - min), S.full.y)
+  return { x: S.full.x, y: top, w: S.full.w, h: bottom - top }
+}
+
+/**
+ * How tall a picture may be and still leave room for the words. A square window
+ * is as wide as the poster, which on the 4:5 shape is most of its height — so
+ * what a theme wants is a request, not the answer.
+ */
+function wellHeight(S, wanted) {
+  // A hero needs room for a kicker, a name, a venue, a date and a footer; a list
+  // needs that plus rows. Whatever is left over is the picture's.
+  const keep = S.mode === 'list' ? 700 : 620
+  return Math.max(Math.min(wanted, S.full.h - keep), 180)
+}
+
+/** The lower `share` of the safe area, for text over a full-bleed picture. */
+function lower(S, share) {
+  const h = S.full.h * share
+  return { x: S.full.x, y: S.full.y + S.full.h - h, w: S.full.w, h }
+}
+
+/** A picture band across the top, the height set as a share of the whole poster. */
+const band = (S, share) => ({ x: 0, y: 0, w: S.w, h: S.h * share })
+
+const PHOTO_THEMES = [
+  {
+    id: 'billboard',
+    name: 'Billboard',
+    photo: true,
+    pal: {
+      bg: '#0b0b0d',
+      ink: '#ffffff',
+      ink2: '#c9c9cf',
+      accent: '#ffd400',
+      accentInk: '#141200',
+      line: 'rgba(255,255,255,0.4)',
+      panel: 'rgba(0,0,0,0.4)',
+    },
+    display: 'condensed',
+    displayWeight: 800,
+    align: 'left',
+    boxFor: (S) => lower(S, S.mode === 'list' ? 0.72 : 0.56),
+    paint(ctx, S) {
+      ctx.fillStyle = '#0b0b0d'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, { x: 0, y: 0, w: S.w, h: S.h })
+      // The scrim starts just above the text box, so the picture is clean where
+      // it is a picture and solid where it is a background.
+      const start = (S.box.y - 150) / S.h
+      P.scrim(ctx, { x: 0, y: 0, w: S.w, h: S.h }, [
+        [0, 'rgba(11,11,13,0.25)'],
+        [Math.max(start - 0.12, 0.02), 'rgba(11,11,13,0.1)'],
+        [Math.max(start, 0.1), S.mode === 'list' ? 'rgba(11,11,13,0.86)' : 'rgba(11,11,13,0.62)'],
+        [1, 'rgba(11,11,13,0.97)'],
+      ])
+    },
+  },
+  {
+    id: 'duotone',
+    name: 'Duotone',
+    photo: true,
+    pal: {
+      bg: '#160b2e',
+      ink: '#fff6d6',
+      ink2: '#c3a6ff',
+      accent: '#ffd84d',
+      accentInk: '#20104a',
+      line: 'rgba(255,216,77,0.5)',
+      panel: 'rgba(30,10,70,0.5)',
+    },
+    display: 'black',
+    displayWeight: 900,
+    displayTracking: -0.015,
+    boxFor: (S) => lower(S, S.mode === 'list' ? 0.76 : 0.58),
+    paint(ctx, S) {
+      const full = { x: 0, y: 0, w: S.w, h: S.h }
+      ctx.fillStyle = '#160b2e'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, full)
+      P.duotone(ctx, full, '#3b1978', '#ffd84d')
+      P.scrim(ctx, full, [
+        [0, 'rgba(22,11,46,0.15)'],
+        [0.45, 'rgba(22,11,46,0.55)'],
+        [1, 'rgba(22,11,46,0.95)'],
+      ])
+    },
+  },
+  {
+    id: 'polaroid',
+    name: 'Polaroid',
+    photo: true,
+    pal: {
+      bg: '#f7f6f2',
+      ink: '#17171a',
+      ink2: '#6f6f76',
+      accent: '#e2553d',
+      accentInk: '#fff6f3',
+      line: 'rgba(23,23,26,0.2)',
+      panel: 'rgba(23,23,26,0.06)',
+    },
+    display: 'grotesk',
+    displayWeight: 800,
+    align: 'left',
+    chip: 'outline',
+    grain: 0.08,
+    /** One definition of the window, so the words and the picture can't disagree. */
+    well(S) {
+      const wanted = S.full.w * (S.mode === 'list' ? 0.66 : 1)
+      return { x: S.full.x, y: S.full.y, w: S.full.w, h: wellHeight(S, wanted) }
+    },
+    boxFor(S) {
+      const rect = this.well(S)
+      return below(S, rect.y + rect.h + 58)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#f7f6f2'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const rect = this.well(S)
+      ctx.save()
+      ctx.shadowColor = 'rgba(0,0,0,0.22)'
+      ctx.shadowBlur = 30
+      ctx.shadowOffsetY = 10
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(rect.x - 18, rect.y - 18, rect.w + 36, rect.h + 36)
+      ctx.restore()
+      P.photoFill(ctx, S, rect)
+    },
+  },
+  {
+    id: 'split',
+    name: 'Split',
+    photo: true,
+    pal: {
+      bg: '#12303a',
+      ink: '#f2fbff',
+      ink2: '#9fc4d2',
+      accent: '#ffb03a',
+      accentInk: '#231300',
+      line: 'rgba(242,251,255,0.3)',
+      panel: 'rgba(242,251,255,0.07)',
+    },
+    display: 'grotesk',
+    displayWeight: 800,
+    align: 'left',
+    boxFor(S) {
+      return below(S, band(S, S.mode === 'list' ? 0.3 : 0.46).h + 70)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#12303a'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const top = band(S, S.mode === 'list' ? 0.3 : 0.46)
+      P.photoFill(ctx, S, top)
+      P.line(ctx, 0, top.h, S.w, top.h, '#ffb03a', 10)
+    },
+  },
+  {
+    id: 'arch',
+    name: 'Arch',
+    photo: true,
+    pal: {
+      bg: '#eee6da',
+      ink: '#2b211a',
+      ink2: '#7a6a5c',
+      accent: '#b5563a',
+      accentInk: '#fdf6ef',
+      line: 'rgba(43,33,26,0.28)',
+      panel: 'rgba(43,33,26,0.06)',
+    },
+    display: 'didone',
+    displayWeight: 700,
+    body: 'serif',
+    rule: 'double',
+    chip: 'outline',
+    grain: 0.1,
+    boxFor(S) {
+      const h = S.full.h * (S.mode === 'list' ? 0.3 : 0.46)
+      return below(S, S.full.y + h + 64)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = P.linear(ctx, 0, 0, 0, S.h, [
+        [0, '#f4ede2'],
+        [1, '#e4d8c6'],
+      ])
+      ctx.fillRect(0, 0, S.w, S.h)
+      const h = S.full.h * (S.mode === 'list' ? 0.3 : 0.46)
+      const w = S.full.w * 0.84
+      const rect = { x: (S.w - w) / 2, y: S.full.y, w, h }
+      // A semicircular head on a rectangle: the whole of an arch.
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(rect.x, rect.y + rect.h)
+      ctx.lineTo(rect.x, rect.y + rect.w / 2)
+      ctx.arc(rect.x + rect.w / 2, rect.y + rect.w / 2, rect.w / 2, Math.PI, 0)
+      ctx.lineTo(rect.x + rect.w, rect.y + rect.h)
+      ctx.closePath()
+      ctx.clip()
+      P.photoFill(ctx, S, rect)
+      ctx.restore()
+    },
+  },
+  {
+    id: 'film',
+    name: 'Film',
+    photo: true,
+    pal: {
+      bg: '#0e0e0e',
+      ink: '#f4f1e8',
+      ink2: '#98948a',
+      accent: '#e8b33c',
+      accentInk: '#1a1305',
+      line: 'rgba(244,241,232,0.3)',
+      panel: 'rgba(244,241,232,0.06)',
+    },
+    display: 'mono',
+    displayWeight: 700,
+    body: 'mono',
+    align: 'left',
+    chip: 'outline',
+    grain: 0.16,
+    boxFor(S) {
+      const h = S.h * (S.mode === 'list' ? 0.3 : 0.44)
+      return below(S, h + 80)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#0e0e0e'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const h = S.h * (S.mode === 'list' ? 0.3 : 0.44)
+      const frame = { x: 0, y: 48, w: S.w, h: h - 48 }
+      P.photoFill(ctx, S, { x: 58, y: frame.y + 46, w: S.w - 116, h: frame.h - 92 })
+      P.filmEdge(ctx, frame, 'rgba(244,241,232,0.75)')
+      P.line(ctx, 0, h + 10, S.w, h + 10, 'rgba(244,241,232,0.2)', 2)
+    },
+  },
+  {
+    id: 'zine',
+    name: 'Cut-out',
+    photo: true,
+    pal: {
+      bg: '#efece3',
+      ink: '#111111',
+      ink2: '#4a4a4a',
+      accent: '#ff3b30',
+      accentInk: '#ffffff',
+      line: 'rgba(17,17,17,0.6)',
+      panel: 'rgba(17,17,17,0.1)',
+    },
+    display: 'impact',
+    displayWeight: 400,
+    body: 'condensed',
+    bodyWeight: 700,
+    align: 'left',
+    grain: 0.22,
+    boxFor(S) {
+      const h = S.h * (S.mode === 'list' ? 0.32 : 0.45)
+      return below(S, h + 74)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#efece3'
+      ctx.fillRect(0, 0, S.w, S.h)
+      const h = S.h * (S.mode === 'list' ? 0.32 : 0.45)
+      // Torn out and stuck down crooked, which is the entire idea.
+      ctx.save()
+      ctx.translate(S.w / 2, h / 2)
+      ctx.rotate(-0.025)
+      ctx.translate(-S.w / 2, -h / 2)
+      const rect = { x: 34, y: 30, w: S.w - 68, h: h - 60 }
+      ctx.fillStyle = '#111111'
+      ctx.fillRect(rect.x + 14, rect.y + 16, rect.w, rect.h)
+      P.photoFill(ctx, S, rect)
+      P.dots(ctx, { w: S.w, h, pal: S.pal }, { step: 11, r: 1.6, color: '#111111', amount: 0.12 })
+      ctx.restore()
+      ctx.fillStyle = '#ff3b30'
+      ctx.fillRect(0, h + 24, S.w, 14)
+    },
+  },
+  {
+    id: 'wash',
+    name: 'Wash',
+    photo: true,
+    pal: {
+      bg: '#101820',
+      ink: '#ffffff',
+      ink2: '#9fb2c4',
+      accent: '#6ee7d8',
+      accentInk: '#04241f',
+      line: 'rgba(255,255,255,0.24)',
+      panel: 'rgba(255,255,255,0.07)',
+    },
+    display: 'grotesk',
+    displayWeight: 800,
+    displayCaps: false,
+    displayTracking: -0.02,
+    boxFor: (S) => S.full,
+    paint(ctx, S) {
+      const full = { x: 0, y: 0, w: S.w, h: S.h }
+      ctx.fillStyle = '#101820'
+      ctx.fillRect(0, 0, S.w, S.h)
+      // Faded far back, so a busy photograph becomes a texture instead of a
+      // competitor. This is the style for the picture that isn't quite good
+      // enough to be the poster.
+      P.photoFill(ctx, S, full, { fade: 0.32 })
+      P.scrim(ctx, full, [
+        [0, 'rgba(16,24,32,0.55)'],
+        [0.5, 'rgba(16,24,32,0.35)'],
+        [1, 'rgba(16,24,32,0.8)'],
+      ])
+      P.blob(ctx, S.w * 0.8, S.h * 0.14, S.w * 0.7, '#6ee7d8', 0.14)
+    },
+  },
+  {
+    id: 'framed',
+    name: 'Framed',
+    photo: true,
+    pal: {
+      bg: '#1d1a16',
+      ink: '#ffffff',
+      ink2: '#cfc6b8',
+      accent: '#f5f0e6',
+      accentInk: '#1d1a16',
+      line: 'rgba(255,255,255,0.45)',
+      panel: 'rgba(0,0,0,0.45)',
+    },
+    display: 'humanist',
+    displayWeight: 700,
+    displayTracking: 0.05,
+    boxFor: (S) => lower(S, S.mode === 'list' ? 0.7 : 0.52),
+    paint(ctx, S) {
+      const inset = 62
+      ctx.fillStyle = '#1d1a16'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, { x: 0, y: 0, w: S.w, h: S.h })
+      P.scrim(ctx, { x: 0, y: 0, w: S.w, h: S.h }, [
+        [0, 'rgba(29,26,22,0.2)'],
+        [0.45, 'rgba(29,26,22,0.45)'],
+        [1, 'rgba(29,26,22,0.92)'],
+      ])
+      // A mount, drawn as four bars rather than a stroke so the corners are
+      // square at any width.
+      ctx.fillStyle = '#f5f0e6'
+      ctx.fillRect(0, 0, S.w, inset)
+      ctx.fillRect(0, S.h - inset, S.w, inset)
+      ctx.fillRect(0, 0, inset, S.h)
+      ctx.fillRect(S.w - inset, 0, inset, S.h)
+      P.strokeRound(ctx, inset, inset, S.w - inset * 2, S.h - inset * 2, 0, 'rgba(29,26,22,0.35)', 2)
+    },
+  },
+]
+
 /** Filled in from BASE so a theme can stay as short as its idea. */
-export const templates = THEMES.map((theme) => ({
+export const templates = [...THEMES, ...PHOTO_THEMES].map((theme) => ({
   ...BASE,
+  photo: false,
   ...theme,
   pal: { hot: theme.pal.accent, ...theme.pal },
 }))
@@ -633,8 +1003,16 @@ export function templateById(id) {
   return templates.find((template) => template.id === id) || templates[0]
 }
 
-/** The next look along, for the shuffle button. Never the one already on screen. */
-export function nextTemplate(currentId, random = Math.random) {
-  const others = templateIds.filter((id) => id !== currentId)
-  return others[Math.floor(random() * others.length)] || templateIds[0]
+/** Styles that do something with a picture, and styles that are type alone. */
+export const photoTemplates = templates.filter((template) => template.photo)
+export const plainTemplates = templates.filter((template) => !template.photo)
+
+/**
+ * The next look along, for the shuffle button. Never the one already on screen,
+ * and only from what the strip is currently offering — shuffling to a photo
+ * style when there is no photo would be a dead end.
+ */
+export function nextTemplate(currentId, pool = templates, random = Math.random) {
+  const others = pool.filter((template) => template.id !== currentId)
+  return others[Math.floor(random() * others.length)]?.id || pool[0]?.id || templateIds[0]
 }

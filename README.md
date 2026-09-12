@@ -23,8 +23,8 @@ of it.
   it, keeping its identity and its guests.
 - **Tools** on any event, offered in the event sheet.
 - **Social posts** — a vertical image of one gig, this week's gigs or the rest
-  of the month's, in sixteen styles. The ▣ button above the ＋, or the tool on
-  any upcoming event.
+  of the month's, in twenty-five styles, with or without a photo. The ▣ button
+  above the ＋, or the tool on any upcoming event.
 
 Read-only calendars (the ones shared with you) display but can't be edited, and
 say so rather than failing at the point of saving.
@@ -137,8 +137,17 @@ about what's on. The event you opened the studio from is added on top, so you
 can announce a night before you've published it. Anything in range can be
 unticked before it's drawn.
 
-`src/tools/poster/` splits four ways, and the split is what makes sixteen styles
-affordable:
+**Photos.** Add one and nine more styles appear, built around a picture —
+Billboard, Duotone, Polaroid, Split, Arch, Film, Cut-out, Wash, Framed — and the
+strip puts them first. A crop slider decides what survives the squeeze into a
+vertical frame, which matters because a phone photo cropped to 9:16 takes
+someone's head off about half the time. The image never leaves the phone: it is
+resampled to 1800px in a canvas and drawn straight into the poster, so there is
+no upload and nothing to delete afterwards. Remove it and the styles go back to
+the sixteen typographic ones.
+
+`src/tools/poster/` splits four ways, and the split is what makes twenty-five
+styles affordable:
 
 | file | job |
 | --- | --- |
@@ -153,6 +162,16 @@ rectangle — is written once and shared, which is also why every content size i
 measured rather than hard-coded. Nothing is fetched: the type is whatever
 families the device already has, probed at runtime, so the studio works in a
 venue basement with no signal.
+
+A photo style is the one thing that changes the shape of the problem: it takes
+some of the poster for the picture, so it also says where the words may go
+(`boxFor`), and `S.mode` lets it answer differently for one gig than for nine —
+a single name sits happily over a full-bleed image under a gradient, nine rows of
+dates need a solid ground. Because the box can then be half the height, every
+size and gap in both layouts is the smaller of what it wants and a share of what
+it got, and the optional lines (the town, then the venue) are shed before the
+name is allowed to shrink. At full height the caps win, so a picture being added
+somewhere else never moves the typographic styles.
 
 Thumbnails in the style picker run the same code at 8% scale. `measureText`
 ignores the canvas transform, so a thumbnail is a true miniature of the export

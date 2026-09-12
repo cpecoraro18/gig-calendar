@@ -92,6 +92,15 @@ function drawHero(ctx, S, card, spec) {
     return
   }
 
+  /**
+   * Every size and gap below is the smaller of what the layout wants and a share
+   * of the box it actually got. A photo style hands the words half a poster
+   * instead of a whole one, and without this the fixed sizes stay fixed, the
+   * middle collapses, and the band name is drawn straight through the date.
+   * At full height the caps win and nothing about the typographic styles moves.
+   */
+  const room = (wanted, share) => Math.min(wanted, box.h * share)
+
   /* Top down: the kicker. */
   let top = box.y
   const kicker = upper(spec.kicker)
@@ -100,13 +109,13 @@ function drawHero(ctx, S, card, spec) {
       family: body,
       weight: 700,
       maxWidth: box.w,
-      max: 46,
-      min: 20,
+      max: room(46, 0.055),
+      min: 18,
       tracking: 0.28,
     })
     ctx.fillStyle = pal[theme.kickerInk] || pal.accent
     P.drawLines(ctx, block, x, top, align)
-    top += block.height + 50
+    top += block.height + room(50, 0.05)
   }
 
   /* Bottom up: footer, time, date, rule. Pinning these to the bottom edge is
@@ -118,13 +127,13 @@ function drawHero(ctx, S, card, spec) {
       family: body,
       weight: 600,
       maxWidth: box.w,
-      max: 34,
-      min: 17,
+      max: room(34, 0.045),
+      min: 15,
       tracking: 0.16,
     })
     ctx.fillStyle = pal.ink2
     P.drawLines(ctx, block, x, bottom - block.height, align)
-    bottom -= block.height + 62
+    bottom -= block.height + room(62, 0.055)
   }
 
   if (card.time) {
@@ -132,14 +141,14 @@ function drawHero(ctx, S, card, spec) {
       family: body,
       weight: theme.bodyWeight,
       maxWidth: box.w,
-      max: 52,
-      min: 22,
+      max: room(52, 0.06),
+      min: 20,
       tracking: 0.1,
     })
     bottom -= block.height
     ctx.fillStyle = pal.ink2
     P.drawLines(ctx, block, x, bottom, align)
-    bottom -= 26
+    bottom -= room(26, 0.03)
   }
 
   const date = P.fitLines(ctx, caps(theme, card.dateLine), {
@@ -147,58 +156,65 @@ function drawHero(ctx, S, card, spec) {
     weight: theme.displayWeight,
     maxWidth: box.w,
     maxLines: 2,
-    max: 94,
-    min: 30,
+    max: room(94, 0.11),
+    min: 26,
     tracking: 0.04,
     lineHeight: 1.12,
   })
   bottom -= date.height
   ctx.fillStyle = pal[theme.dateInk] || pal.accent
   P.drawLines(ctx, date, x, bottom, align)
-  bottom -= 46
+  bottom -= room(46, 0.05)
 
   drawRule(ctx, S, bottom, Math.min(box.w, 420))
-  bottom -= 56
+  bottom -= room(56, 0.06)
 
   /* Whatever is left in the middle belongs to the act and the venue. */
-  const middle = Math.max(bottom - top, 160)
-  const venue = card.venue
+  const middle = Math.max(bottom - top, 120)
+  const gap = room(54, 0.06)
+  let venue = card.venue
     ? P.fitLines(ctx, card.venue, {
         family: body,
         weight: theme.bodyWeight,
         maxWidth: box.w,
         maxLines: 2,
-        max: 66,
-        min: 26,
+        max: room(66, 0.075),
+        min: 22,
         tracking: 0.02,
         lineHeight: 1.16,
       })
     : null
-  const detail = card.venueDetail
+  let detail = card.venueDetail
     ? P.fitOneLine(ctx, upper(card.venueDetail), {
         family: body,
         weight: 500,
         maxWidth: box.w,
-        max: 34,
-        min: 16,
+        max: room(34, 0.04),
+        min: 14,
         tracking: 0.14,
       })
     : null
 
-  const venueHeight = (venue?.height || 0) + (detail ? detail.height + 14 : 0)
+  const measure = () => (venue?.height || 0) + (detail ? detail.height + 14 : 0)
+  // Shed the optional lines rather than let the name be crushed. The town is the
+  // first thing a poster can live without; the venue is the second.
+  if (detail && middle - measure() - gap < 150) detail = null
+  if (venue && middle - measure() - gap < 110) venue = null
+
+  const venueHeight = measure()
   const act = P.fitLines(ctx, caps(theme, card.act), {
     family: display,
     weight: theme.displayWeight,
     maxWidth: box.w,
-    maxHeight: Math.max(middle - venueHeight - 54, 120),
+    maxHeight: Math.max(middle - venueHeight - (venueHeight ? gap : 0), 60),
     maxLines: 3,
     max: 210,
-    min: 38,
+    min: 26,
     tracking: theme.displayTracking,
     lineHeight: 0.98,
   })
 
-  const total = act.height + (venueHeight ? venueHeight + 54 : 0)
+  const total = act.height + (venueHeight ? venueHeight + gap : 0)
   let y = top + Math.max((middle - total) / 2, 0)
 
   ctx.fillStyle = pal[theme.actInk] || pal.ink
@@ -206,7 +222,7 @@ function drawHero(ctx, S, card, spec) {
   y += act.height
 
   if (venueHeight) {
-    y += 54
+    y += gap
     if (venue) {
       ctx.fillStyle = pal.ink
       P.drawLines(ctx, venue, x, y, align)
@@ -309,6 +325,10 @@ function drawList(ctx, S, cards, spec) {
   const body = font(theme.body)
   const display = font(theme.display)
 
+  // Same bargain as the hero: a photo style leaves less room, so the heading is
+  // the smaller of what it wants and a share of what it was given.
+  const room = (wanted, share) => Math.min(wanted, box.h * share)
+
   let top = box.y
   const heading = text(spec.heading)
   if (heading) {
@@ -317,8 +337,8 @@ function drawList(ctx, S, cards, spec) {
       weight: theme.displayWeight,
       maxWidth: box.w,
       maxLines: 2,
-      max: 150,
-      min: 40,
+      max: room(150, 0.2),
+      min: 34,
       tracking: theme.displayTracking,
       lineHeight: 0.98,
     })
@@ -333,18 +353,18 @@ function drawList(ctx, S, cards, spec) {
       family: body,
       weight: 700,
       maxWidth: box.w,
-      max: 38,
-      min: 17,
+      max: room(38, 0.05),
+      min: 15,
       tracking: 0.24,
     })
     ctx.fillStyle = pal[theme.kickerInk] || pal.accent
     P.drawLines(ctx, block, x, top, align)
-    top += block.height + 16
+    top += block.height + room(16, 0.02)
   }
 
-  top += 26
+  top += room(26, 0.03)
   drawRule(ctx, S, top)
-  top += 34
+  top += room(34, 0.04)
 
   let bottom = box.bottom
   const footer = text(spec.footer)
@@ -422,19 +442,29 @@ export function renderPoster(canvas, spec, scale = 1) {
     h: size.h,
     theme,
     pal: theme.pal,
+    pad: size.pad,
+    /** Which layout is about to run. A photo style needs to know: one gig can
+        sit over a full-bleed picture, nine rows of dates cannot. */
+    mode: cards.length > 1 ? 'list' : 'hero',
+    photo: spec.photo || null,
+    focus: typeof spec.focus === 'number' ? spec.focus : 0.5,
     rng: P.seeded(`${theme.id}|${size.id}`),
-    box: {
+    /** The whole safe area. What a theme leaves of it is `box`. */
+    full: {
       x: size.pad.side,
       y: size.pad.top,
       w: size.w - size.pad.side * 2,
       h: size.h - size.pad.top - size.pad.bottom,
     },
   }
+  // A theme that puts a picture somewhere has to say where the words may go;
+  // everything else gets the safe area untouched.
+  S.box = { ...S.full, ...(theme.boxFor ? theme.boxFor(S) : null) }
   S.box.right = S.box.x + S.box.w
   S.box.bottom = S.box.y + S.box.h
 
   theme.paint(ctx, S)
-  if (cards.length > 1) drawList(ctx, S, cards, spec)
+  if (S.mode === 'list') drawList(ctx, S, cards, spec)
   else drawHero(ctx, S, cards[0], spec)
   if (theme.grain) P.grain(ctx, S, theme.grain)
 

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { listEvents, AuthError } from '../../lib/calendar.js'
 import { addDays, startOfDay } from '../../lib/dates.js'
 import { sortEvents } from '../../lib/events.js'
@@ -7,7 +7,7 @@ import { readPref, writePref } from '../../lib/prefs.js'
 import SheetModal from '../../components/SheetModal.vue'
 import { gigCalendarId } from '../gig/tool.js'
 import { privateProps, SRC_EVENT_ID } from '../gig/gigs.js'
-import { templates, nextTemplate } from './themes.js'
+import { templateById, photoTemplates, plainTemplates, nextTemplate } from './themes.js'
 import { SIZES, renderPoster, toPngBlob } from './render.js'
 import {
   SCOPES,
@@ -37,6 +37,13 @@ const PREF = {
 /** Far enough forward to cover the rest of any month, and a picker worth having. */
 const LOOKAHEAD_DAYS = 70
 
+/**
+ * Every photo is resampled to this before it is used. Redrawn across twenty-five
+ * thumbnails on every keystroke, a twelve-megapixel original is the one thing
+ * here heavy enough to drop frames — and no poster is 4000px across anyway.
+ */
+const MAX_PHOTO_EDGE = 1800
+
 const keyOf = (event) => `${event.calendarId}|${event.id}`
 
 const gigs = ref([])
@@ -55,9 +62,15 @@ const remembered = (key, options, fallback) => {
   return options.some((option) => option.id === saved) ? saved : fallback
 }
 
-const template = ref(remembered(PREF.template, templates, templates[0].id))
+const template = ref(remembered(PREF.template, plainTemplates, plainTemplates[0].id))
 const size = ref(remembered(PREF.size, SIZES, SIZES[0].id))
 const copy = ref({ kicker: '', heading: '', subheading: '', footer: '' })
+
+/** Shallow on purpose: this holds a canvas, which must reach drawImage as the
+    real thing rather than as anything Vue has wrapped around it. */
+const photo = shallowRef(null)
+const photoError = ref('')
+const focus = ref(0.5)
 
 const preview = ref(null)
 /** Deliberately not reactive: these are filled in during render, and writing to
@@ -126,8 +139,19 @@ const spec = computed(() => ({
   template: template.value,
   size: size.value,
   cards: cards.value,
+  photo: photo.value,
+  focus: focus.value,
   ...copy.value,
 }))
+
+/**
+ * Photo styles are only offered once there is a photo — nine placeholder wells
+ * in the strip would be nine things that don't work yet. Adding one puts them
+ * at the front, which is also how you find out they exist.
+ */
+const strip = computed(() =>
+  photo.value ? [...photoTemplates, ...plainTemplates] : plainTemplates
+)
 
 const ready = computed(() => cards.value.length > 0)
 const sizeLabel = computed(() => SIZES.find((s) => s.id === size.value) || SIZES[0])
@@ -165,8 +189,52 @@ function toggle(gig) {
   dropped.value = next
 }
 
+/* ------------------------------------------------------------------ a photo */
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('unreadable'))
+    image.src = src
+  })
+}
+
+async function onFile(event) {
+  const file = event.target.files?.[0]
+  // Cleared so that picking the same file again still counts as a change.
+  event.target.value = ''
+  if (!file) return
+  photoError.value = ''
+  const url = URL.createObjectURL(file)
+  try {
+    const image = await loadImage(url)
+    const scale = Math.min(1, MAX_PHOTO_EDGE / Math.max(image.width, image.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(Math.round(image.width * scale), 1)
+    canvas.height = Math.max(Math.round(image.height * scale), 1)
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
+    photo.value = canvas
+    // Adding a photo to a style that ignores pictures would look like nothing
+    // happened, so move to one that uses it.
+    if (!templateById(template.value).photo) template.value = photoTemplates[0].id
+  } catch {
+    photoError.value = 'That image could not be read.'
+  } finally {
+    // Safe now: the pixels live in a canvas of our own.
+    URL.revokeObjectURL(url)
+  }
+}
+
+function clearPhoto() {
+  photo.value = null
+  focus.value = 0.5
+  photoError.value = ''
+  if (templateById(template.value).photo) template.value = plainTemplates[0].id
+}
+
 function shuffle() {
-  template.value = nextTemplate(template.value)
+  template.value = nextTemplate(template.value, strip.value)
   document.getElementById(`poster-thumb-${template.value}`)?.scrollIntoView({
     behavior: 'smooth',
     block: 'nearest',
@@ -187,14 +255,14 @@ function drawPreview() {
 }
 
 /**
- * Sixteen miniatures cost sixteen full layout passes, which is too much to do on
- * every keystroke and too little to be worth a worker. A short wait after you
- * stop typing puts it in the gap where nobody is looking.
+ * Every miniature costs a full layout pass, which is too much to do on every
+ * keystroke and too little to be worth a worker. A short wait after you stop
+ * typing puts it in the gap where nobody is looking.
  */
 function drawThumbs() {
   clearTimeout(thumbTimer)
   thumbTimer = setTimeout(() => {
-    for (const item of templates) {
+    for (const item of strip.value) {
       const canvas = thumbs[item.id]
       if (canvas) renderPoster(canvas, { ...spec.value, template: item.id }, 0.08)
     }
@@ -244,7 +312,8 @@ async function run(share) {
 }
 
 onMounted(async () => {
-  copy.value.footer = readPref(PREF.footer) ?? 'chrispecmusic.com'
+  // No default: a poster says nothing at the bottom unless you put it there.
+  copy.value.footer = readPref(PREF.footer) ?? ''
   await loadGigs()
   if (!chosen.value || !pool.value.some((gig) => keyOf(gig) === chosen.value)) {
     const seed = (props.event && publishedFrom(props.event)) || pool.value[0]
@@ -326,10 +395,31 @@ onUnmounted(() => {
       </div>
 
       <div class="field">
+        <span class="label">Photo</span>
+        <div class="photo-row">
+          <label class="btn btn-quiet file">
+            {{ photo ? 'Change photo' : 'Add a photo' }}
+            <input type="file" accept="image/*" @change="onFile" />
+          </label>
+          <button v-if="photo" class="btn btn-quiet" @click="clearPhoto">Remove</button>
+        </div>
+        <span v-if="!photo" class="hint muted">
+          Adds {{ photoTemplates.length }} more styles built around a picture.
+        </span>
+        <p v-if="photoError" class="error" role="alert">{{ photoError }}</p>
+      </div>
+
+      <label v-if="photo" class="field">
+        <span class="label">Crop — what stays in frame</span>
+        <input v-model.number="focus" class="slider" type="range" min="0" max="1" step="0.01" />
+        <span class="hint muted">Left keeps the top of the photo, right the bottom.</span>
+      </label>
+
+      <div class="field">
         <span class="label">Style</span>
         <div class="strip">
           <button
-            v-for="item in templates"
+            v-for="item in strip"
             :id="`poster-thumb-${item.id}`"
             :key="item.id"
             class="thumb"
@@ -539,8 +629,34 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* Sixteen looks don't fit on a phone, and a grid of them would push the preview
-   off screen. A scroller keeps the whole set one flick away. */
+.photo-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.photo-row .btn {
+  flex: 1;
+  min-height: 42px;
+  font-size: 0.88rem;
+}
+
+/* The control is the label; the input itself is only there to open the picker. */
+.file input[type='file'] {
+  display: none;
+}
+
+/* The shared field styling is for boxes you type in, and turns a range input
+   into a bordered slab with the thumb floating in the middle of it. */
+.field input.slider {
+  min-height: 2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  accent-color: var(--accent);
+}
+
+/* Twenty-five looks don't fit on a phone, and a grid of them would push the
+   preview off screen. A scroller keeps the whole set one flick away. */
 .strip {
   display: flex;
   gap: 0.5rem;
