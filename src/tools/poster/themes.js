@@ -3,7 +3,7 @@
  *
  * A template here is a theme, not a layout: colours, type, a background painter
  * and a few switches the two layout engines in `render.js` read. Splitting it
- * that way is what makes forty-eight of them affordable — the hard part, fitting a
+ * that way is what makes fifty-six of them affordable — the hard part, fitting a
  * band name and five dates into a fixed rectangle, is written and debugged once,
  * and a new look is a palette and a dozen lines of background.
  *
@@ -1198,7 +1198,297 @@ function lower(S, share) {
 /** A picture band across the top, the height set as a share of the whole poster. */
 const band = (S, share) => ({ x: 0, y: 0, w: S.w, h: S.h * share })
 
+/** The mirror of `below`, for the one composition that hangs the picture off the
+ *  bottom of the poster and sets the words above it. */
+function above(S, y, min = S.mode === 'list' ? 640 : 560) {
+  const top = S.full.y
+  const bottom = Math.min(Math.max(y, top + min), S.full.y + S.full.h)
+  return { x: S.full.x, y: top, w: S.full.w, h: bottom - top }
+}
+
+/**
+ * The quiet ones with a picture, and like the plain set they come first.
+ *
+ * A photograph is already the loudest thing on a poster, so these add nothing to
+ * it: no accent bar across the crop, no ring, no sprockets, no duotone. What
+ * varies is where the picture sits and how much of the poster it takes — which
+ * turns out to be plenty, because every one of these is a composition somebody
+ * has printed for a century.
+ *
+ * They keep the same three habits as the plain set: no chip behind the day, no
+ * spot colour on the date, and an accent equal to the ink, so there is no third
+ * colour waiting to be placed.
+ */
+const BASIC_PHOTO = [
+  {
+    id: 'full',
+    name: 'Full',
+    photo: true,
+    pal: {
+      bg: '#0c0c0e',
+      ink: '#ffffff',
+      ink2: '#c4c4c8',
+      accent: '#ffffff',
+      accentInk: '#0c0c0e',
+      line: 'rgba(255,255,255,0.22)',
+      panel: 'rgba(255,255,255,0.06)',
+    },
+    displayWeight: 700,
+    displayTracking: 0.01,
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    boxFor: (S) => lower(S, S.mode === 'list' ? 0.7 : 0.46),
+    paint(ctx, S) {
+      const full = { x: 0, y: 0, w: S.w, h: S.h }
+      ctx.fillStyle = '#0c0c0e'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, full)
+      // Only as much shading as the words need, starting where they start.
+      const start = Math.min(Math.max((S.box.y - 220) / S.h, 0.05), 0.7)
+      P.scrim(ctx, full, [
+        [0, 'rgba(12,12,14,0)'],
+        [start, 'rgba(12,12,14,0.08)'],
+        [Math.min(start + 0.18, 0.95), S.mode === 'list' ? 'rgba(12,12,14,0.84)' : 'rgba(12,12,14,0.6)'],
+        [1, 'rgba(12,12,14,0.92)'],
+      ])
+    },
+  },
+  {
+    id: 'cover',
+    name: 'Cover',
+    photo: true,
+    pal: {
+      bg: '#101014',
+      ink: '#f7f5f0',
+      ink2: '#c3bfb6',
+      accent: '#f7f5f0',
+      accentInk: '#101014',
+      line: 'rgba(247,245,240,0.24)',
+      panel: 'rgba(247,245,240,0.06)',
+    },
+    display: 'serif',
+    displayWeight: 700,
+    displayTracking: 0.04,
+    body: 'serif',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    /** The whole poster, so the name sits in the middle of the picture. */
+    boxFor: (S) => S.full,
+    paint(ctx, S) {
+      const full = { x: 0, y: 0, w: S.w, h: S.h }
+      ctx.fillStyle = '#101014'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, full)
+      // Even, because type lands at the top, the middle and the bottom of this one.
+      P.scrim(ctx, full, [
+        [0, 'rgba(16,16,20,0.52)'],
+        [0.5, 'rgba(16,16,20,0.4)'],
+        [1, 'rgba(16,16,20,0.6)'],
+      ])
+    },
+  },
+  {
+    id: 'header',
+    name: 'Header',
+    photo: true,
+    pal: {
+      bg: '#f7f6f3',
+      ink: '#16171a',
+      ink2: '#6d6f74',
+      accent: '#16171a',
+      accentInk: '#f7f6f3',
+      line: 'rgba(22,23,26,0.2)',
+      panel: 'rgba(22,23,26,0.05)',
+    },
+    displayWeight: 700,
+    displayCaps: false,
+    displayTracking: -0.02,
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    align: 'left',
+    well(S) {
+      return { x: 0, y: 0, w: S.w, h: wellHeight(S, S.full.h * (S.mode === 'list' ? 0.4 : 0.62)) }
+    },
+    boxFor(S) {
+      return below(S, this.well(S).h + 60)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#f7f6f3'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, this.well(S))
+    },
+  },
+  {
+    id: 'inset',
+    name: 'Inset',
+    photo: true,
+    pal: {
+      bg: '#16181b',
+      ink: '#f0f1f3',
+      ink2: '#989ba0',
+      accent: '#f0f1f3',
+      accentInk: '#16181b',
+      line: 'rgba(240,241,243,0.2)',
+      panel: 'rgba(240,241,243,0.05)',
+    },
+    displayWeight: 700,
+    displayTracking: 0.01,
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    /** Margins on three sides, so the picture reads as a plate rather than a bleed. */
+    well(S) {
+      const h = wellHeight(S, S.full.h * (S.mode === 'list' ? 0.36 : 0.58))
+      return { x: S.full.x, y: S.full.y, w: S.full.w, h }
+    },
+    boxFor(S) {
+      const rect = this.well(S)
+      return below(S, rect.y + rect.h + 56)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#16181b'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, this.well(S))
+    },
+  },
+  {
+    id: 'square',
+    name: 'Square',
+    photo: true,
+    pal: {
+      bg: '#f4f1ea',
+      ink: '#1d1a16',
+      ink2: '#6f6a61',
+      accent: '#1d1a16',
+      accentInk: '#f4f1ea',
+      line: 'rgba(29,26,22,0.2)',
+      panel: 'rgba(29,26,22,0.05)',
+    },
+    display: 'serif',
+    displayWeight: 700,
+    displayCaps: false,
+    body: 'serif',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    well(S) {
+      const side = Math.min(S.full.w, wellHeight(S, S.full.h * (S.mode === 'list' ? 0.34 : 0.58)))
+      return { x: (S.w - side) / 2, y: S.full.y, w: side, h: side }
+    },
+    boxFor(S) {
+      const rect = this.well(S)
+      return below(S, rect.y + rect.h + 54)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#f4f1ea'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, this.well(S))
+    },
+  },
+  {
+    id: 'base',
+    name: 'Base',
+    photo: true,
+    pal: {
+      bg: '#ffffff',
+      ink: '#121212',
+      ink2: '#757575',
+      accent: '#121212',
+      accentInk: '#ffffff',
+      line: 'rgba(18,18,18,0.18)',
+      panel: 'rgba(18,18,18,0.05)',
+    },
+    displayWeight: 700,
+    displayCaps: false,
+    displayTracking: -0.025,
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    /** The only one that hangs the picture off the bottom and sets above it. */
+    well(S) {
+      const h = wellHeight(S, S.h * (S.mode === 'list' ? 0.3 : 0.42))
+      return { x: 0, y: S.h - h, w: S.w, h }
+    },
+    boxFor(S) {
+      return above(S, this.well(S).y - 50)
+    },
+    paint(ctx, S) {
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, this.well(S))
+    },
+  },
+  {
+    id: 'tint',
+    name: 'Tint',
+    photo: true,
+    pal: {
+      bg: '#ece9e2',
+      ink: '#1a1a1a',
+      ink2: '#6b6b6b',
+      accent: '#1a1a1a',
+      accentInk: '#ece9e2',
+      line: 'rgba(26,26,26,0.2)',
+      panel: 'rgba(26,26,26,0.05)',
+    },
+    displayWeight: 700,
+    displayTracking: 0.02,
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    boxFor: (S) => S.full,
+    paint(ctx, S) {
+      const full = { x: 0, y: 0, w: S.w, h: S.h }
+      ctx.fillStyle = '#ece9e2'
+      ctx.fillRect(0, 0, S.w, S.h)
+      // Faded into the paper rather than laid on top of it, so dark type reads
+      // anywhere on the poster and a busy photograph stops competing.
+      P.photoFill(ctx, S, full, { fade: 0.3 })
+      ctx.fillStyle = 'rgba(236,233,226,0.4)'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'panel',
+    name: 'Panel',
+    photo: true,
+    pal: {
+      bg: '#fbfaf8',
+      ink: '#15151a',
+      ink2: '#6c6c72',
+      accent: '#15151a',
+      accentInk: '#fbfaf8',
+      line: 'rgba(21,21,26,0.2)',
+      panel: 'rgba(21,21,26,0.05)',
+    },
+    displayWeight: 700,
+    displayCaps: false,
+    displayTracking: -0.02,
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    boxFor: (S) => lower(S, S.mode === 'list' ? 0.66 : 0.44),
+    paint(ctx, S) {
+      ctx.fillStyle = '#fbfaf8'
+      ctx.fillRect(0, 0, S.w, S.h)
+      P.photoFill(ctx, S, { x: 0, y: 0, w: S.w, h: S.h })
+      /* A solid band, not a translucent card — and it stops short of the bottom
+         edge, so the picture is still there underneath it. That strip of photo
+         below the type is the whole difference between this and a photo with a
+         caption. */
+      const top = Math.max(S.box.y - 44, 0)
+      const bottom = Math.min(S.box.y + S.box.h + 44, S.h)
+      ctx.fillStyle = '#fbfaf8'
+      ctx.fillRect(0, top, S.w, bottom - top)
+    },
+  },
+]
+
 const PHOTO_THEMES = [
+  ...BASIC_PHOTO,
   {
     id: 'billboard',
     name: 'Billboard',

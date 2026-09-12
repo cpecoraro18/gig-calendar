@@ -23,7 +23,7 @@ of it.
   it, keeping its identity and its guests.
 - **Tools** on any event, offered in the event sheet.
 - **Social posts** — a vertical image of one gig, this week's gigs or the rest
-  of the month's, in forty-eight styles, with or without a photo. The ▣ button
+  of the month's, in fifty-six styles, with or without a photo. The ▣ button
   above the ＋, or the tool on any upcoming event.
 
 Read-only calendars (the ones shared with you) display but can't be edited, and
@@ -138,30 +138,36 @@ can announce a night before you've published it. Anything in range can be
 unticked before it's drawn.
 
 **The quiet ones come first.** Plain, Noir, Paper, Slate, Typewriter, Sage, Clay
-and Indigo lead the style strip: a flat ground, one typeface and the space around
-it, with no ornament of any kind. They also drop the box from behind the day in a
-list and stop the date being a spot colour, so a run of dates reads as a set list
-rather than a row of badges. The expressive styles follow. Most posts want the
-front of the strip; the back of it is there for the ones that don't.
+and Indigo lead the style strip, with a matching eight at the head of the photo
+styles: a flat ground, one typeface and the space around it, no ornament of any
+kind. They also drop the box from behind the day in a list and stop the date
+being a spot colour, so a run of dates reads as a set list rather than a row of
+badges. The expressive styles follow. Most posts want the front of the strip;
+the back of it is there for the ones that don't.
 
-**Photos.** Add one and fifteen more styles appear, built around a picture —
-Billboard, Duotone, Polaroid, Split, Arch, Film, Cut-out, Wash, Framed, Halftone,
-Slices, Spotlight, Card, Wedge and Column — and the strip puts them first. A crop
-slider decides what survives the squeeze into a vertical frame, which matters
-because a phone photo cropped to 9:16 takes someone's head off about half the
+**Photos.** Add one and twenty-three more styles appear, built around a picture,
+and the strip puts them first. The quiet eight lead again — Full, Cover, Header,
+Inset, Square, Base, Tint, Panel — which add nothing to the photograph at all:
+no bar across the crop, no ring, no duotone. What varies is where the picture
+sits and how much of the poster it takes. Then the rest: Billboard, Duotone,
+Polaroid, Split, Arch, Film, Cut-out, Wash, Framed, Halftone, Slices, Spotlight,
+Card, Wedge, Column.
+
+A crop slider decides what survives the squeeze into a vertical frame, which
+matters because a phone photo cropped to 9:16 takes someone's head off about half the
 time. The image never leaves the phone: it is resampled to 1800px in a canvas
 and drawn straight into the poster, so there is no upload and nothing to delete
 afterwards. Remove it and the styles go back to the thirty-three typographic
 ones.
 
-`src/tools/poster/` splits four ways, and the split is what makes forty-eight
+`src/tools/poster/` splits four ways, and the split is what makes fifty-six
 styles affordable:
 
 | file | job |
 | --- | --- |
 | `paint.js` | the canvas kit — type fitting, tracking, grain, gradients, bulbs |
 | `posters.js` | calendar events → act, venue, day, time |
-| `themes.js` | the forty-eight looks: palette, type, background, a few switches |
+| `themes.js` | the fifty-six looks: palette, type, background, a few switches |
 | `render.js` | the two layouts — one gig as a hero, several as a list |
 
 A theme is a palette and a dozen lines of background, never a layout. The hard
