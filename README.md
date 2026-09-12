@@ -22,6 +22,9 @@ of it.
   which calendar, and a simple repeat rule. Changing an event's calendar moves
   it, keeping its identity and its guests.
 - **Tools** on any event, offered in the event sheet.
+- **Social posts** — a vertical image of one gig, this week's gigs or the rest
+  of the month's, in sixteen styles. The ▣ button above the ＋, or the tool on
+  any upcoming event.
 
 Read-only calendars (the ones shared with you) display but can't be edited, and
 say so rather than failing at the point of saving.
@@ -82,6 +85,9 @@ import setlist from './setlist/tool.js'
 export const tools = [gig, setlist]
 ```
 
+There are two: **the gig publisher**, which puts a night on the website, and
+**the post maker**, which turns one into a picture for a phone.
+
 ### The gig tool
 
 Publishing writes an ordinary event to the gigs calendar, so the website keeps
@@ -109,6 +115,48 @@ follow. Google uses your email address as your primary calendar's id, which is
 why `srcCalendarId` records the literal string `primary` instead. And the
 description box starts as a copy of the source event's — so if a band invite
 carries a fee, a home address or a phone number, clear it before publishing.
+
+### The post tool
+
+Opens from ▣ above the ＋, or from any upcoming event. It draws a vertical
+image — 1080×1920 for a story, 1080×1350 for a feed — and hands it to the
+system share sheet, which on a phone means straight into Instagram. Where
+sharing files isn't available it saves a PNG instead.
+
+Three ranges, all of them starting today rather than at the top of the period,
+because a poster advertising last Tuesday is worse than no poster:
+
+| range | covers |
+| --- | --- |
+| One gig | whichever you pick, day of or later |
+| This week | today through the end of this calendar week |
+| This month | today through the end of this month |
+
+Gigs come from the **gigs calendar**, so a post and the website can't disagree
+about what's on. The event you opened the studio from is added on top, so you
+can announce a night before you've published it. Anything in range can be
+unticked before it's drawn.
+
+`src/tools/poster/` splits four ways, and the split is what makes sixteen styles
+affordable:
+
+| file | job |
+| --- | --- |
+| `paint.js` | the canvas kit — type fitting, tracking, grain, gradients, bulbs |
+| `posters.js` | calendar events → act, venue, day, time |
+| `themes.js` | the sixteen looks: palette, type, background, a few switches |
+| `render.js` | the two layouts — one gig as a hero, several as a list |
+
+A theme is a palette and a dozen lines of background, never a layout. The hard
+part — fitting an unknown band name and up to eleven dates inside a fixed
+rectangle — is written once and shared, which is also why every content size is
+measured rather than hard-coded. Nothing is fetched: the type is whatever
+families the device already has, probed at runtime, so the studio works in a
+venue basement with no signal.
+
+Thumbnails in the style picker run the same code at 8% scale. `measureText`
+ignores the canvas transform, so a thumbnail is a true miniature of the export
+rather than a simplified drawing that flatters it.
 
 ## How events load
 

@@ -4,8 +4,8 @@
  *
  * A tool is a plain object, so adding one is adding a file and a line to the
  * list below — the event sheet, the agenda badges and the settings screen all
- * pick it up without knowing what it does. The gig publisher is the first one,
- * and it exists mostly to prove the shape is real rather than theoretical.
+ * pick it up without knowing what it does. The gig publisher puts a night on the
+ * website; the post maker turns it into a picture for a phone.
  *
  * Every field but `id`, `title` and `panel` is optional:
  *
@@ -26,8 +26,9 @@
  *            agenda rows. `tone` is 'live', 'warn' or 'plain'
  */
 import gig from './gig/tool.js'
+import poster from './poster/tool.js'
 
-export const tools = [gig]
+export const tools = [gig, poster]
 
 export const toolsWithSettings = tools.filter((tool) => tool.settings)
 

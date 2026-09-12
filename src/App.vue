@@ -39,6 +39,7 @@ import MonthView from './components/MonthView.vue'
 import AgendaView from './components/AgendaView.vue'
 import EventSheet from './components/EventSheet.vue'
 import EventEditor from './components/EventEditor.vue'
+import PosterPanel from './tools/poster/PosterPanel.vue'
 
 const configured = Boolean(GOOGLE_CLIENT_ID)
 const ready = ref(false)
@@ -58,6 +59,12 @@ const openEvent = computed(() => currentEvent(openRef.value))
 const editing = ref(null)
 const activeTool = ref(null)
 const showSettings = ref(false)
+/**
+ * The post maker is also a tool on an event, but a post about a whole week
+ * belongs to no single event — so it gets its own way in, off the + button
+ * rather than the header, which has no room left on a phone.
+ */
+const showPoster = ref(false)
 
 const busy = ref(false)
 const actionError = ref('')
@@ -167,6 +174,7 @@ function doSignOut() {
   openRef.value = null
   editing.value = null
   showSettings.value = false
+  showPoster.value = false
 }
 
 async function doRefresh() {
@@ -319,6 +327,10 @@ onMounted(boot)
       />
     </main>
 
+    <button class="fab fab-post" aria-label="Make a post" @click="showPoster = true">
+      <span aria-hidden="true">▣</span>
+    </button>
+
     <button class="fab" aria-label="New event" @click="startNew">＋</button>
 
     <EventSheet
@@ -351,6 +363,8 @@ onMounted(boot)
       @close="activeTool = null"
       @changed="syncTools"
     />
+
+    <PosterPanel v-if="showPoster" @close="showPoster = false" />
 
     <CalendarSettings
       v-if="showSettings"
@@ -461,6 +475,19 @@ onMounted(boot)
   transform: scale(0.96);
 }
 
+/* Stacked above the +, and quiet: making a post is a thing you do often, but
+   never as often as adding a night to the calendar. */
+.fab-post {
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  width: 2.9rem;
+  height: 2.9rem;
+  font-size: 1.15rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
 .centre {
   text-align: center;
   padding: 3rem 1.5rem;
@@ -501,7 +528,8 @@ onMounted(boot)
     margin: 0 auto;
   }
 
-  .fab {
+  .fab,
+  .fab-post {
     right: calc(50vw - 19rem);
   }
 }
