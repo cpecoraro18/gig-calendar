@@ -11,6 +11,8 @@ import { templateById, photoTemplates, plainTemplates, nextTemplate } from './th
 import { SIZES, renderPoster, toPngBlob } from './render.js'
 import {
   SCOPES,
+  ADDRESS_MODES,
+  addressMode,
   scopeWindow,
   gigsIn,
   isUpcoming,
@@ -32,6 +34,7 @@ const PREF = {
   template: 'tool.poster.template',
   size: 'tool.poster.size',
   footer: 'tool.poster.footer',
+  address: 'tool.poster.address',
 }
 
 /** Far enough forward to cover the rest of any month, and a picker worth having. */
@@ -64,6 +67,8 @@ const remembered = (key, options, fallback) => {
 
 const template = ref(remembered(PREF.template, plainTemplates, plainTemplates[0].id))
 const size = ref(remembered(PREF.size, SIZES, SIZES[0].id))
+/** How much of the venue address goes under the name — yours, not the gig's. */
+const address = ref(addressMode(readPref(PREF.address)))
 const copy = ref({ kicker: '', heading: '', subheading: '', footer: '' })
 
 /** Shallow on purpose: this holds a canvas, which must reach drawImage as the
@@ -133,7 +138,7 @@ const scoped = computed(() => {
 })
 
 const included = computed(() => scoped.value.filter((gig) => !dropped.value.has(keyOf(gig))))
-const cards = computed(() => included.value.map((gig) => cardFor(gig)))
+const cards = computed(() => included.value.map((gig) => cardFor(gig, new Date(), address.value)))
 
 const spec = computed(() => ({
   template: template.value,
@@ -180,6 +185,7 @@ watch(
 )
 watch(template, (value) => writePref(PREF.template, value))
 watch(size, (value) => writePref(PREF.size, value))
+watch(address, (value) => writePref(PREF.address, value))
 
 function toggle(gig) {
   const next = new Set(dropped.value)
@@ -450,6 +456,18 @@ onUnmounted(() => {
       <label v-if="cards.length <= 1" class="field">
         <span class="label">Kicker</span>
         <input v-model="copy.kicker" type="text" placeholder="Tonight" />
+      </label>
+
+      <label v-if="cards.length <= 1" class="field">
+        <span class="label">Address under the venue</span>
+        <select v-model="address">
+          <option v-for="mode in ADDRESS_MODES" :key="mode.id" :value="mode.id">
+            {{ mode.label }} — {{ mode.hint }}
+          </option>
+        </select>
+        <span class="hint muted">
+          Taken from the gig's location. Remembered for next time.
+        </span>
       </label>
 
       <template v-else>

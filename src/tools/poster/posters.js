@@ -54,20 +54,76 @@ export function isUpcoming(event, now = new Date()) {
 }
 
 /**
- * A venue is usually typed in as a full postal address. The name is the part
- * before the first comma; the rest is directions, which belong on a map rather
- * than on a poster, so it is kept separate and only drawn where there is room.
+ * How much of the address is printed under the venue name. A calendar location
+ * is usually a full postal address, and which part of it is worth a poster
+ * depends on the night: a local room needs no address at all, a street address
+ * is what a stranger needs to walk there, and the town is what tells someone
+ * three towns over whether the drive is worth it.
  */
-export function splitLocation(location) {
+export const ADDRESS_MODES = [
+  { id: 'none', label: 'None', hint: 'Venue name only' },
+  { id: 'town', label: 'Town', hint: 'Chicago, IL' },
+  { id: 'street', label: 'Street', hint: '4802 N Broadway' },
+  { id: 'full', label: 'Full', hint: '4802 N Broadway, Chicago, IL 60640' },
+]
+
+export const DEFAULT_ADDRESS = 'town'
+
+/** A remembered mode is only worth having if it is still one of the modes. */
+export function addressMode(id) {
+  return ADDRESS_MODES.some((mode) => mode.id === id) ? id : DEFAULT_ADDRESS
+}
+
+/** A part that is a street line: "4802 N Broadway", "PO Box 12", "Unit 4". */
+const STREET = /^(\d|po box\b|p\.o\.|unit\b|suite\b|ste\b|apt\b)/i
+
+/**
+ * Only the last part of an address is ever a country, and only these spellings
+ * are worth recognising — guessing more widely would eat "Illinois" off the end
+ * of "The Mill, Chicago, Illinois".
+ */
+const COUNTRY =
+  /^(usa|us|u\.s\.a?\.?|united states( of america)?|canada|mexico|uk|u\.k\.|united kingdom|england|scotland|wales|northern ireland|ireland|australia|new zealand|france|germany|deutschland|spain|españa|italy|italia|netherlands|nederland|japan)$/i
+
+/** A postcode hanging off the end of the town line: "IL 60640", "N1 9JB". */
+const POSTCODE = /[\s,]+(\d{4,}(-\d{4})?|[a-z]{1,2}\d[a-z\d]?\s+\d[a-z]{2})$/i
+
+/**
+ * A venue is usually typed in as a full postal address. The name is the part
+ * before the first comma; everything after it is directions, taken apart here so
+ * that a poster can print as much or as little of them as it asks for.
+ */
+export function parseLocation(location) {
   const parts = String(location || '')
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean)
-  if (!parts.length) return { venue: '', detail: '' }
+  if (!parts.length) return { venue: '', street: '', town: '', full: '' }
+
   const [venue, ...rest] = parts
-  // Drop the street line: "4802 N Broadway" adds nothing next to "Chicago".
-  const detail = rest.filter((part) => !/^\d/.test(part)).join(', ')
-  return { venue, detail }
+  const tail = [...rest]
+  // The country goes first, from the end: it is never the town, and dropping it
+  // here keeps it out of everything but the full address.
+  if (tail.length > 1 && COUNTRY.test(tail[tail.length - 1])) tail.pop()
+  const street = tail.length && STREET.test(tail[0]) ? tail.shift() : ''
+
+  return {
+    venue,
+    street,
+    // Whatever is left is the town and its state; the postcode is for an envelope.
+    town: tail.join(', ').replace(POSTCODE, '').trim(),
+    full: rest.join(', '),
+  }
+}
+
+/** The line printed under the venue, in whichever shape was asked for. */
+export function formatAddress(parts, mode = DEFAULT_ADDRESS) {
+  if (mode === 'none') return ''
+  if (mode === 'full') return parts.full
+  if (mode === 'street') return parts.street
+  // The town, falling back to the street: an address with no town in it still
+  // has something worth printing.
+  return parts.town || parts.street
 }
 
 /**
@@ -87,10 +143,10 @@ export function splitTitle(summary) {
  * in its natural case: whether a look shouts is the look's business, and a card
  * that arrives pre-shouted can never be set quietly again.
  */
-export function cardFor(event, now = new Date()) {
+export function cardFor(event, now = new Date(), address = DEFAULT_ADDRESS) {
   const start = eventStart(event) || new Date()
   const titled = splitTitle(event.summary)
-  const located = splitLocation(event.location)
+  const located = parseLocation(event.location)
   const allDay = isAllDay(event)
 
   const today = isSameDay(start, now)
@@ -100,7 +156,8 @@ export function cardFor(event, now = new Date()) {
     key: `${event.calendarId}|${event.id}`,
     act: titled.act || 'Untitled',
     venue: located.venue || titled.venue || '',
-    venueDetail: located.venue ? located.detail : '',
+    // A venue that came from the title has no address behind it to print.
+    venueDetail: located.venue ? formatAddress(located, address) : '',
     start,
     allDay,
     time: allDay ? '' : formatTime(start),

@@ -184,14 +184,18 @@ function drawHero(ctx, S, card, spec) {
         lineHeight: 1.16,
       })
     : null
+  // Two lines, because a full street address is the one detail long enough to
+  // need them; a town still sets on one and nothing about it moves.
   let detail = card.venueDetail
-    ? P.fitOneLine(ctx, upper(card.venueDetail), {
+    ? P.fitLines(ctx, upper(card.venueDetail), {
         family: body,
         weight: 500,
         maxWidth: box.w,
+        maxLines: 2,
         max: room(34, 0.04),
         min: 14,
         tracking: 0.14,
+        lineHeight: 1.3,
       })
     : null
 
