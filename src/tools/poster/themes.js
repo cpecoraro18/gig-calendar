@@ -3,7 +3,7 @@
  *
  * A template here is a theme, not a layout: colours, type, a background painter
  * and a few switches the two layout engines in `render.js` read. Splitting it
- * that way is what makes forty of them affordable — the hard part, fitting a
+ * that way is what makes forty-eight of them affordable — the hard part, fitting a
  * band name and five dates into a fixed rectangle, is written and debugged once,
  * and a new look is a palette and a dozen lines of background.
  *
@@ -70,7 +70,217 @@ const BASE = {
   radius: 14,
 }
 
+/**
+ * The quiet ones, deliberately first.
+ *
+ * No ornament at all: a flat ground, one typeface and the space around it. Every
+ * one of them is a `paint` that fills a rectangle, and what separates them is
+ * paper colour, type and alignment — which is most of what separated real
+ * posters before anyone had a gradient tool.
+ *
+ * They also turn two switches the expressive themes leave alone. `dateInk: 'ink'`
+ * stops the date being a spot colour, and `chip: 'plain'` drops the box from
+ * behind the day in a list, so a run of dates reads as a set list rather than as
+ * a row of badges. A restrained look is mostly a matter of what you leave out.
+ */
+const BASIC = [
+  {
+    id: 'plain',
+    name: 'Plain',
+    pal: {
+      bg: '#ffffff',
+      ink: '#111111',
+      ink2: '#767676',
+      accent: '#111111',
+      accentInk: '#ffffff',
+      line: 'rgba(17,17,17,0.16)',
+      panel: 'rgba(17,17,17,0.04)',
+    },
+    displayWeight: 700,
+    displayCaps: false,
+    displayTracking: -0.025,
+    rule: 'none',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'noir',
+    name: 'Noir',
+    pal: {
+      bg: '#0b0b0b',
+      ink: '#fafafa',
+      ink2: '#8c8c8c',
+      accent: '#fafafa',
+      accentInk: '#0b0b0b',
+      line: 'rgba(250,250,250,0.22)',
+      panel: 'rgba(250,250,250,0.05)',
+    },
+    displayWeight: 700,
+    displayTracking: 0.02,
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#0b0b0b'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'paper',
+    name: 'Paper',
+    pal: {
+      bg: '#f7f4ee',
+      ink: '#1a1714',
+      ink2: '#6f675e',
+      accent: '#1a1714',
+      accentInk: '#f7f4ee',
+      line: 'rgba(26,23,20,0.2)',
+      panel: 'rgba(26,23,20,0.05)',
+    },
+    display: 'serif',
+    displayWeight: 700,
+    displayCaps: false,
+    body: 'serif',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#f7f4ee'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'slate',
+    name: 'Slate',
+    pal: {
+      bg: '#23272c',
+      ink: '#eef1f4',
+      ink2: '#97a0a9',
+      accent: '#eef1f4',
+      accentInk: '#23272c',
+      line: 'rgba(238,241,244,0.2)',
+      panel: 'rgba(238,241,244,0.05)',
+    },
+    displayWeight: 700,
+    displayTracking: 0.01,
+    align: 'left',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#23272c'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'typewriter',
+    name: 'Typewriter',
+    pal: {
+      bg: '#f4f2ed',
+      ink: '#1c1c1c',
+      ink2: '#6e6e6e',
+      accent: '#1c1c1c',
+      accentInk: '#f4f2ed',
+      line: 'rgba(28,28,28,0.22)',
+      panel: 'rgba(28,28,28,0.05)',
+    },
+    display: 'mono',
+    displayWeight: 600,
+    displayCaps: false,
+    body: 'mono',
+    bodyWeight: 500,
+    align: 'left',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#f4f2ed'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'sage',
+    name: 'Sage',
+    pal: {
+      bg: '#dde3d9',
+      ink: '#232b23',
+      ink2: '#5f6b5f',
+      accent: '#232b23',
+      accentInk: '#dde3d9',
+      line: 'rgba(35,43,35,0.22)',
+      panel: 'rgba(35,43,35,0.05)',
+    },
+    display: 'humanist',
+    displayWeight: 700,
+    displayTracking: 0.04,
+    body: 'humanist',
+    rule: 'none',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#dde3d9'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'clay',
+    name: 'Clay',
+    pal: {
+      bg: '#e9ded5',
+      ink: '#43342c',
+      ink2: '#857065',
+      accent: '#43342c',
+      accentInk: '#e9ded5',
+      line: 'rgba(67,52,44,0.22)',
+      panel: 'rgba(67,52,44,0.05)',
+    },
+    display: 'serif',
+    displayWeight: 700,
+    displayCaps: false,
+    body: 'humanist',
+    rule: 'none',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#e9ded5'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+  {
+    id: 'indigo',
+    name: 'Indigo',
+    pal: {
+      bg: '#1a2242',
+      ink: '#eef0f8',
+      ink2: '#9aa3c4',
+      accent: '#eef0f8',
+      accentInk: '#1a2242',
+      line: 'rgba(238,240,248,0.22)',
+      panel: 'rgba(238,240,248,0.05)',
+    },
+    display: 'didone',
+    displayWeight: 700,
+    displayTracking: 0.06,
+    body: 'serif',
+    chip: 'plain',
+    dateInk: 'ink',
+    kickerInk: 'ink2',
+    paint(ctx, S) {
+      ctx.fillStyle = '#1a2242'
+      ctx.fillRect(0, 0, S.w, S.h)
+    },
+  },
+]
+
 const THEMES = [
+  ...BASIC,
   {
     id: 'midnight',
     name: 'Midnight',
