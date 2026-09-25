@@ -114,7 +114,7 @@ function remove() {
   <SheetModal title="Publish as a gig" label="Gig listing" @close="emit('close')">
     <p class="intro muted">
       Creates a listing on <strong>{{ calendarName(state.calendarId) }}</strong
-      >, which chrispecmusic.com reads. The date and time come from the event
+      >, the calendar your website reads. The date and time come from the event
       itself; the words below are yours.
     </p>
 

@@ -14,7 +14,7 @@
         <strong>Web application</strong>.
       </li>
       <li>
-        Add <code>https://calendar.chrispecmusic.com</code> and
+        Add the origin this build is served from and
         <code>http://localhost:5173</code> as <strong>Authorised JavaScript origins</strong>.
         Leave redirect URIs empty — this app never uses one.
       </li>

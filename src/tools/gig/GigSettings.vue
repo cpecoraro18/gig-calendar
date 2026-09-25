@@ -24,7 +24,7 @@ function choose(id) {
       </option>
     </select>
     <span class="hint muted">
-      The calendar chrispecmusic.com reads. Publishing a gig writes an event
+      The calendar your website reads. Publishing a gig writes an event
       here; nothing else in this app touches it.
     </span>
   </label>

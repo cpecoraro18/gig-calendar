@@ -34,7 +34,7 @@ export default {
   id: 'gig',
   title: 'Publish as a gig',
   icon: '♪',
-  blurb: 'Puts this event on chrispecmusic.com.',
+  blurb: 'Lists this event on your gigs calendar, for your website to show.',
   panel: GigPanel,
   settings: GigSettings,
 

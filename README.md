@@ -1,6 +1,6 @@
 # Calendar
 
-A private calendar at **calendar.chrispecmusic.com**, built for a phone. It
+A calendar at **calendar.chrispecmusic.com**, built for a phone. It
 reads and writes your Google calendars directly — month grid, agenda, create,
 edit, delete — and adds **tools**: the things a general calendar app can't do,
 starting with publishing an event as a gig on chrispecmusic.com.
@@ -217,12 +217,40 @@ series' rule is a Google Calendar job.
      `http://localhost:5173`
    - Redirect URIs: leave empty, this app never uses one.
 2. Enable the **Google Calendar API** on the same project.
-3. On the OAuth consent screen, add yourself as a **test user** (or publish the
-   app) so Google will issue tokens to your account.
+3. On the OAuth consent screen, add yourself as a **test user** so Google will
+   issue tokens to your account. That's enough for a private build; to open it
+   to everyone, see [Opening it to anyone](#opening-it-to-anyone).
 4. Add the client ID to the repo as a secret named `GOOGLE_CLIENT_ID`
    (*Settings* → *Secrets and variables* → *Actions*).
 5. Point DNS: a `CNAME` record for `calendar` → `cpecoraro18.github.io`.
    `public/CNAME` already carries the domain into the build.
+
+## Opening it to anyone
+
+The code is already multi-user — there's no allowlist and nothing to host per
+person. What stops a stranger is Google: while the consent screen is in
+*Testing*, only listed test users can sign in. Both scopes are **sensitive**
+(not restricted), so going public means a verification review but no paid
+security assessment.
+
+1. **Verify the domain.** Add `chrispecmusic.com` in
+   [Search Console](https://search.google.com/search-console) with the Google
+   account that owns the Cloud project.
+2. **Fill in the consent screen** (*Google Auth Platform* → *Branding*):
+   - App name `Calendar` — it must match the name on the homepage
+   - Homepage `https://calendar.chrispecmusic.com` — the signed-out screen,
+     which says what the app does and links the policy
+   - Privacy policy `https://calendar.chrispecmusic.com/privacy.html`
+   - Authorised domain `chrispecmusic.com`, plus a support email and logo
+3. **Declare the scopes** (*Data access*): `calendar.events` and
+   `calendar.readonly`, with a line each saying why — the policy page has
+   wording to reuse.
+4. **Record a demo video** and upload it to YouTube as unlisted: the consent
+   screen with the URL bar showing the client ID, then each scope in use —
+   reading events, creating and editing one, and the calendar list in ⚙.
+5. **Publish** (*Audience* → *Publish app*) and submit for verification. Until
+   Google approves, anyone can still sign in past an "unverified app" warning,
+   capped at 100 users.
 
 ## Local development
 

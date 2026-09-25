@@ -18,6 +18,13 @@ const ASSETS = `assets-${VERSION}`
 /** Every navigation is answered from this one entry, whatever path was asked for. */
 const SHELL_URL = '/index.html'
 
+/**
+ * Static pages that sit beside the app. Answering these from the shell would
+ * show the app instead, and caching them as the shell would launch the app as
+ * the privacy policy — so they are left entirely to the browser.
+ */
+const PAGES = new Set(['/privacy.html'])
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
@@ -48,7 +55,9 @@ self.addEventListener('fetch', (event) => {
   // Sign-in and the Calendar API are cross-origin. They must never be cached —
   // a stale event list is worse than no event list — and returning here leaves
   // them entirely to the browser rather than merely passing them through.
-  if (new URL(request.url).origin !== self.location.origin) return
+  const url = new URL(request.url)
+  if (url.origin !== self.location.origin) return
+  if (PAGES.has(url.pathname)) return
 
   event.respondWith(request.mode === 'navigate' ? navigate(request) : asset(request))
 })

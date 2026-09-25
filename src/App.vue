@@ -264,11 +264,22 @@ onMounted(boot)
 
   <div v-else-if="!ready" class="centre muted">Loading…</div>
 
+  <!-- Doubles as the public homepage Google's OAuth review asks for: it has to
+       say what the app does and link the privacy policy without a sign-in. -->
   <div v-else-if="!signedIn" class="centre signin">
     <h1>Calendar</h1>
-    <p class="muted">Sign in with the Google account that owns your calendars.</p>
+    <p class="muted">
+      A phone-first calendar for gigging musicians. It shows and edits your
+      Google calendars, lists a night on the calendar your website reads, and
+      turns your upcoming gigs into a picture for Instagram.
+    </p>
     <button class="btn btn-primary" @click="doSignIn">Sign in with Google</button>
     <p v-if="authError" class="error" role="alert">{{ authError }}</p>
+    <p class="fine muted">
+      Your calendar goes straight from Google to your browser. Nothing is sent
+      to or stored on any other server.
+      <a href="/privacy.html">Privacy policy</a>
+    </p>
   </div>
 
   <template v-else>
@@ -510,6 +521,11 @@ onMounted(boot)
 
 .signin p {
   margin: 0;
+}
+
+.signin .fine {
+  font-size: 0.8rem;
+  margin-top: 1rem;
 }
 
 .warning {
