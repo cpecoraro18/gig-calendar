@@ -35,6 +35,7 @@ import {
 import { loadToolStates } from './tools/registry'
 import SetupNotice from './components/SetupNotice.vue'
 import CalendarSettings from './components/CalendarSettings.vue'
+import Welcome from './components/Welcome.vue'
 import MonthView from './components/MonthView.vue'
 import AgendaView from './components/AgendaView.vue'
 import EventSheet from './components/EventSheet.vue'
@@ -149,8 +150,15 @@ async function boot() {
   }
 }
 
+const WELCOMED = 'app.welcomed'
+const showWelcome = ref(false)
+
 async function start() {
+  // Read before loadCalendars saves a selection: anyone who used the app
+  // before the welcome existed has one, and already knows their way round.
+  const firstRun = !readPref(WELCOMED) && readPref(STORAGE.visible) === null
   await loadCalendars()
+  showWelcome.value = firstRun
   const span = initialRange()
   await load(span.from, span.to)
 }
@@ -164,6 +172,11 @@ async function doSignIn() {
   } catch (error) {
     authError.value = error.message
   }
+}
+
+function closeWelcome() {
+  writePref(WELCOMED, true)
+  showWelcome.value = false
 }
 
 function doSignOut() {
@@ -267,11 +280,11 @@ onMounted(boot)
   <!-- Doubles as the public homepage Google's OAuth review asks for: it has to
        say what the app does and link the privacy policy without a sign-in. -->
   <div v-else-if="!signedIn" class="centre signin">
-    <h1>Calendar</h1>
+    <h1>Gig Calendar</h1>
     <p class="muted">
       A phone-first calendar for gigging musicians. It shows and edits your
-      Google calendars, lists a night on the calendar your website reads, and
-      turns your upcoming gigs into a picture for Instagram.
+      Google calendars, turns your upcoming gigs into posts for Instagram, and
+      can list them on your website too.
     </p>
     <button class="btn btn-primary" @click="doSignIn">Sign in with Google</button>
     <p v-if="authError" class="error" role="alert">{{ authError }}</p>
@@ -383,6 +396,8 @@ onMounted(boot)
       @changed="syncTools"
       @sign-out="doSignOut"
     />
+
+    <Welcome v-if="showWelcome" @close="closeWelcome" @changed="syncTools" />
   </template>
 </template>
 
@@ -526,6 +541,10 @@ onMounted(boot)
 .signin .fine {
   font-size: 0.8rem;
   margin-top: 1rem;
+}
+
+.signin .fine a {
+  color: var(--accent);
 }
 
 .warning {

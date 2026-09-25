@@ -30,9 +30,16 @@ export function tint(hex, alpha = 0.24) {
  * their stated value, so anything below the threshold gets mixed with white
  * until it clears it.
  */
-export function readable(hex) {
+export function readable(hex, light = false) {
   const [r, g, b] = rgb(hex)
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  // On a white ground the problem inverts: Google's pastels vanish, so anything
+  // too bright is darkened until it holds up as text.
+  if (light) {
+    if (luminance <= 0.42) return `rgb(${r}, ${g}, ${b})`
+    const drop = (channel) => Math.round(channel * (0.42 / luminance))
+    return `rgb(${drop(r)}, ${drop(g)}, ${drop(b)})`
+  }
   if (luminance >= 0.55) return `rgb(${r}, ${g}, ${b})`
   const lift = (channel) => Math.round(channel + (255 - channel) * (0.55 - luminance))
   return `rgb(${lift(r)}, ${lift(g)}, ${lift(b)})`

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0f1216" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-    <title>Privacy policy · Calendar</title>
+    <title>Privacy policy · Gig Calendar</title>
     <!-- A plain page, not part of the app bundle: Google's OAuth review needs a
          privacy policy it can read without signing in. -->
     <style>
@@ -33,16 +33,19 @@
       strong { color: var(--ink); }
       a { color: var(--accent); }
       code { font-size: 0.9em; }
+      @media (prefers-color-scheme: light) {
+        :root { --bg: #f6f7f9; --ink: #141a21; --ink-2: #4c5966; --accent: #a15f00; color-scheme: light; }
+      }
     </style>
   </head>
   <body>
     <main>
-      <p><a href="/">← Calendar</a></p>
+      <p><a href="/">← Gig Calendar</a></p>
       <h1>Privacy policy</h1>
       <p>Last updated 25 September 2026</p>
 
       <p>
-        Calendar is a web app for viewing and editing your Google calendars on a
+        Gig Calendar is a web app for viewing and editing your Google calendars on a
         phone, publishing events to a calendar your own website reads, and
         making images of your upcoming gigs to share. It runs entirely in your
         browser. There is no server behind it that receives, stores or sees your
@@ -56,7 +59,7 @@
           <strong>View and edit events on all your calendars</strong>
           (<code>calendar.events</code>) — to show your events, and to create,
           edit, move and delete them when you ask it to, including publishing an
-          event to a calendar you choose as your gigs calendar.
+          event to a calendar you choose as your website calendar.
         </li>
         <li>
           <strong>See your calendars</strong> (<code>calendar.readonly</code>) —
@@ -89,8 +92,9 @@
         </li>
         <li>
           <strong>Your preferences</strong> — which calendars are shown, your
-          default calendar, month or agenda view, your gigs calendar and your
-          last social post style — are
+          default calendar, month or agenda view, light or dark theme, which
+          calendars hold your gigs and your website listings, and your last
+          social post style — are
           kept in your browser's local storage on your device.
         </li>
         <li>
@@ -110,7 +114,7 @@
 
       <h2>Google API Services User Data Policy</h2>
       <p>
-        Calendar's use and transfer of information received from Google APIs
+        Gig Calendar's use and transfer of information received from Google APIs
         adheres to the
         <a href="https://developers.google.com/terms/api-services-user-data-policy"
           >Google API Services User Data Policy</a>, including the Limited Use

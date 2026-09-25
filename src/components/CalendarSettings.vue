@@ -8,6 +8,7 @@ import {
   setDefaultCalendar,
 } from '../lib/store'
 import { toolsWithSettings } from '../tools/registry'
+import { THEMES, themeChoice, setTheme } from '../lib/theme'
 import SheetModal from './SheetModal.vue'
 import { ref } from 'vue'
 
@@ -66,6 +67,19 @@ async function show(id) {
           </option>
         </select>
         <span class="hint muted">Where the + button puts things unless you change it.</span>
+      </label>
+    </section>
+
+    <section class="block">
+      <h3>Appearance</h3>
+      <label class="field">
+        <span class="label">Theme</span>
+        <select :value="themeChoice" @change="setTheme($event.target.value)">
+          <option v-for="theme in THEMES" :key="theme.id" :value="theme.id">
+            {{ theme.label }}
+          </option>
+        </select>
+        <span class="hint muted">Posts look the same whichever you pick.</span>
       </label>
     </section>
 

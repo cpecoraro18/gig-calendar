@@ -13,6 +13,7 @@ import {
 import { sortEvents, isAllDay, eventStart } from '../lib/events'
 import { eventsByDay, colorOf } from '../lib/store'
 import { tint, readable } from '../lib/colors'
+import { isLight } from '../lib/theme'
 import EventRow from './EventRow.vue'
 
 const props = defineProps({
@@ -76,7 +77,7 @@ const dayEvents = computed(() => sortEvents(eventsByDay.value.get(ymd(props.sele
 function chipStyle(event) {
   const color = colorOf(event)
   return isAllDay(event)
-    ? { background: tint(color), color: readable(color) }
+    ? { background: tint(color), color: readable(color, isLight.value) }
     : { color: 'var(--ink-2)' }
 }
 

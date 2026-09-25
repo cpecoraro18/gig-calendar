@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Calendar",
-  "short_name": "Calendar",
-  "description": "A calendar console for your Google calendars, with the gig publisher built in.",
+  "name": "Gig Calendar",
+  "short_name": "Gigs",
+  "description": "A phone-first calendar for gigging musicians: your Google calendars, plus posts for your gigs.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

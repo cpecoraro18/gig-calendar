@@ -4,8 +4,9 @@ import { listEvents, AuthError } from '../../lib/calendar.js'
 import { addDays, startOfDay } from '../../lib/dates.js'
 import { sortEvents } from '../../lib/events.js'
 import { readPref, writePref } from '../../lib/prefs.js'
+import { calendars, calendarName } from '../../lib/store.js'
 import SheetModal from '../../components/SheetModal.vue'
-import { gigCalendarId } from '../gig/tool.js'
+import { posterCalendarId, setPosterCalendarId } from './tool.js'
 import { privateProps, SRC_EVENT_ID } from '../gig/gigs.js'
 import { templateById, photoTemplates, plainTemplates, nextTemplate } from './themes.js'
 import { SIZES, renderPoster, toPngBlob } from './render.js'
@@ -55,6 +56,9 @@ const loadError = ref('')
 const exporting = ref(false)
 const exportError = ref('')
 
+/** Which calendar the gigs come from. Empty until chosen, here or in ⚙. */
+const sourceId = ref(posterCalendarId())
+
 const scope = ref('one')
 const chosen = ref(props.event ? keyOf(props.event) : '')
 const dropped = ref(new Set())
@@ -85,13 +89,13 @@ const thumbs = {}
 /* ----------------------------------------------------------------- the gigs */
 
 /**
- * The gigs calendar is the right source for a poster: it holds exactly what the
- * website already says, so a post and the site can't disagree. The event the
- * studio was opened from is added on top, because you often want to announce a
+ * Gigs come from the one calendar chosen for posts. The event the studio was
+ * opened from is added on top, because it may live somewhere else entirely —
+ * and when the source is the website calendar, you often want to announce a
  * night before you have got round to publishing it.
  */
 async function loadGigs() {
-  const calendarId = gigCalendarId()
+  const calendarId = sourceId.value
   if (!calendarId) {
     loading.value = false
     return
@@ -138,7 +142,47 @@ const scoped = computed(() => {
 })
 
 const included = computed(() => scoped.value.filter((gig) => !dropped.value.has(keyOf(gig))))
-const cards = computed(() => included.value.map((gig) => cardFor(gig, new Date(), address.value)))
+/**
+ * Act and venue as typed over in this sitting, by gig. The calendar's title is
+ * only a guess at what a poster should say — "Joe's Pub gig w/ Sam" is a note to
+ * yourself, not a headline — so the words are always yours to change.
+ */
+const overrides = ref({})
+
+function worded(gig) {
+  const card = cardFor(gig, new Date(), address.value)
+  const typed = overrides.value[card.key]
+  if (!typed) return card
+  return {
+    ...card,
+    act: typed.act ?? card.act,
+    venue: typed.venue ?? card.venue,
+    // A venue typed from scratch has no address behind it.
+    venueDetail: typed.venue === undefined ? card.venueDetail : '',
+  }
+}
+
+const cards = computed(() => included.value.map(worded))
+
+/** Whose words are open for editing: the one gig, or the row last tapped ✎. */
+const editKey = ref('')
+const wordingKey = computed(() =>
+  scope.value === 'one' ? (scoped.value[0] ? keyOf(scoped.value[0]) : '') : editKey.value
+)
+const wording = computed(() => {
+  const gig = scoped.value.find((item) => keyOf(item) === wordingKey.value)
+  return gig ? worded(gig) : null
+})
+
+function setWording(field, value) {
+  const key = wordingKey.value
+  overrides.value = { ...overrides.value, [key]: { ...overrides.value[key], [field]: value } }
+}
+
+function editRow(gig) {
+  const key = keyOf(gig)
+  editKey.value = editKey.value === key ? '' : key
+}
 
 const spec = computed(() => ({
   template: template.value,
@@ -176,6 +220,7 @@ function reseed() {
 watch([scope, chosen], () => {
   // Gigs left out of last week's post shouldn't stay left out of this month's.
   dropped.value = new Set()
+  editKey.value = ''
   reseed()
 })
 
@@ -317,9 +362,16 @@ async function run(share) {
   }
 }
 
-onMounted(async () => {
-  // No default: a poster says nothing at the bottom unless you put it there.
-  copy.value.footer = readPref(PREF.footer) ?? ''
+/** Choosing where gigs live from inside the studio, the first time it opens. */
+async function chooseSource(id) {
+  setPosterCalendarId(id)
+  sourceId.value = id
+  loading.value = true
+  loadError.value = ''
+  await start()
+}
+
+async function start() {
   await loadGigs()
   if (!chosen.value || !pool.value.some((gig) => keyOf(gig) === chosen.value)) {
     const seed = (props.event && publishedFrom(props.event)) || pool.value[0]
@@ -329,6 +381,12 @@ onMounted(async () => {
   await nextTick()
   drawPreview()
   drawThumbs()
+}
+
+onMounted(() => {
+  // No default: a poster says nothing at the bottom unless you put it there.
+  copy.value.footer = readPref(PREF.footer) ?? ''
+  start()
 })
 
 onUnmounted(() => {
@@ -348,15 +406,28 @@ onUnmounted(() => {
       ></canvas>
     </div>
 
+    <!-- Asked here rather than sending anyone off to ⚙: the first time you open
+         the studio is exactly when you find out it needs to know. -->
+    <label v-if="!sourceId" class="field">
+      <span class="label">Which calendar are your gigs on?</span>
+      <select value="" @change="chooseSource($event.target.value)">
+        <option value="" disabled>Choose a calendar</option>
+        <option v-for="calendar in calendars" :key="calendar.id" :value="calendar.id">
+          {{ calendar.summary }}
+        </option>
+      </select>
+      <span class="hint muted">Remembered for next time. Change it under ⚙.</span>
+    </label>
+
     <p v-if="loading" class="muted centre">Loading gigs…</p>
     <p v-else-if="loadError" class="error" role="alert">{{ loadError }}</p>
 
-    <p v-else-if="!pool.length" class="note">
-      No upcoming gigs to post about. Publish a gig, or choose the gigs calendar
-      under <strong>⚙</strong>.
+    <p v-else-if="!pool.length && sourceId" class="note">
+      Nothing coming up on <strong>{{ calendarName(sourceId) }}</strong>. Add a
+      gig there, or choose another calendar under <strong>⚙</strong>.
     </p>
 
-    <template v-else>
+    <template v-else-if="pool.length">
       <div class="seg" role="group" aria-label="What the post covers">
         <button
           v-for="option in SCOPES"
@@ -380,7 +451,7 @@ onUnmounted(() => {
       </label>
 
       <div v-else class="field">
-        <span class="label">{{ scoped.length }} in range · tap to leave one out</span>
+        <span class="label">{{ scoped.length }} in range · tap to leave one out, ✎ to reword</span>
         <p v-if="!scoped.length" class="note">
           Nothing booked in that stretch. Try another range, or post a single gig.
         </p>
@@ -396,8 +467,40 @@ onUnmounted(() => {
               <span class="pick-when">{{ cardFor(gig).dateShort }}</span>
               <span class="pick-what">{{ gig.summary || '(no title)' }}</span>
             </button>
+            <button
+              class="edit"
+              :class="{ on: editKey === keyOf(gig) }"
+              :aria-pressed="editKey === keyOf(gig)"
+              :aria-label="`Change the words for ${gig.summary || 'this gig'}`"
+              @click="editRow(gig)"
+            >
+              ✎
+            </button>
           </li>
         </ul>
+      </div>
+
+      <!-- What the poster says, not what the calendar says. Starts as the best
+           reading of the title and location, and is only ever a suggestion. -->
+      <div v-if="wording" class="wording">
+        <label class="field">
+          <span class="label">Act</span>
+          <input
+            type="text"
+            :value="wording.act"
+            placeholder="Who's playing"
+            @input="setWording('act', $event.target.value)"
+          />
+        </label>
+        <label class="field">
+          <span class="label">Venue</span>
+          <input
+            type="text"
+            :value="wording.venue"
+            placeholder="Where"
+            @input="setWording('venue', $event.target.value)"
+          />
+        </label>
       </div>
 
       <div class="field">
@@ -645,6 +748,36 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.picks li {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.picks li .pick {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit {
+  flex: none;
+  width: var(--tap);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.edit.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wording {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
 }
 
 .photo-row {

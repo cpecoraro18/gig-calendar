@@ -32,7 +32,7 @@ export function setGigCalendarId(id) {
 
 export default {
   id: 'gig',
-  title: 'Publish as a gig',
+  title: 'Publish to website',
   icon: '♪',
   blurb: 'Lists this event on your gigs calendar, for your website to show.',
   panel: GigPanel,

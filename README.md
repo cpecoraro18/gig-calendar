@@ -1,12 +1,12 @@
-# Calendar
+# Gig Calendar
 
-A calendar at **calendar.chrispecmusic.com**, built for a phone. It
-reads and writes your Google calendars directly — month grid, agenda, create,
-edit, delete — and adds **tools**: the things a general calendar app can't do,
-starting with publishing an event as a gig on chrispecmusic.com.
+A calendar for gigging musicians at **calendar.chrispecmusic.com**, built for
+a phone and open to anyone with a Google account. It reads and writes your
+Google calendars directly — month grid, agenda, create, edit, delete — and adds
+**tools**: the things a general calendar app can't do. Social posts for your
+gigs, and publishing them to a website that reads a calendar.
 
-It is a calendar first. The gig publisher is one tool inside it, not the point
-of it.
+It is a calendar first. The tools live inside it, not the other way round.
 
 ## What it does
 
@@ -25,6 +25,10 @@ of it.
 - **Social posts** — a vertical image of one gig, this week's gigs or the rest
   of the month's, in fifty-six styles, with or without a photo. The ▣ button
   above the ＋, or the tool on any upcoming event.
+- **Light and dark**, following the phone unless you pick one in ⚙.
+- **A welcome on first sign-in** that says what's here and asks the two
+  questions the tools need: which calendar your gigs are on, and whether your
+  website reads one.
 
 Read-only calendars (the ones shared with you) display but can't be edited, and
 say so rather than failing at the point of saving.
@@ -85,12 +89,14 @@ import setlist from './setlist/tool.js'
 export const tools = [gig, setlist]
 ```
 
-There are two: **the gig publisher**, which puts a night on the website, and
-**the post maker**, which turns one into a picture for a phone.
+There are two: **the post maker**, which turns a night into a picture for a
+phone, and **the gig publisher**, which puts it on a website.
 
 ### The gig tool
 
-Publishing writes an ordinary event to the gigs calendar, so the website keeps
+Optional, and only offered once a **website calendar** is chosen in ⚙ — most
+musicians won't have one, and they never see the button. Publishing writes an
+ordinary event to that calendar, so the website keeps
 working untouched. What ties that listing back to the event it came from lives
 in `extendedProperties.private`:
 
@@ -132,10 +138,20 @@ because a poster advertising last Tuesday is worse than no poster:
 | This week | today through the end of this calendar week |
 | This month | today through the end of this month |
 
-Gigs come from the **gigs calendar**, so a post and the website can't disagree
-about what's on. The event you opened the studio from is added on top, so you
-can announce a night before you've published it. Anything in range can be
-unticked before it's drawn.
+Gigs come from **the calendar you say your gigs are on** — asked on first
+sign-in, in the studio the first time it opens, or under ⚙. It can be your
+main calendar: nothing is assumed about what else is on it, and anything can be
+left out of a post. Before this setting existed, posts read the website
+calendar, so anyone with that set keeps it as their source until they choose.
+The event you opened the studio from is added on top, even from another
+calendar. Anything in range can be unticked before it's drawn.
+
+**The words are a guess, and yours to change.** A title of "Act @ Venue" is
+split in two. When the location names the venue, the title gives up just the
+act however it's written — "Trio at Joe's Pub", "Trio – Joe's Pub", "Trio live
+at Joe's Pub". Anything else can be typed over: the one gig's act and venue sit
+under the picker, and in a list ✎ opens them for that row. Typed words last for
+the sitting, not forever.
 
 **The quiet ones come first.** Plain, Noir, Paper, Slate, Typewriter, Sage, Clay
 and Indigo lead the style strip, with a matching eight at the head of the photo
@@ -237,7 +253,7 @@ security assessment.
    [Search Console](https://search.google.com/search-console) with the Google
    account that owns the Cloud project.
 2. **Fill in the consent screen** (*Google Auth Platform* → *Branding*):
-   - App name `Calendar` — it must match the name on the homepage
+   - App name `Gig Calendar` — it must match the name on the homepage
    - Homepage `https://calendar.chrispecmusic.com` — the signed-out screen,
      which says what the app does and links the policy
    - Privacy policy `https://calendar.chrispecmusic.com/privacy.html`

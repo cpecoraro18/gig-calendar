@@ -135,8 +135,21 @@ export function formatAddress(parts, mode = DEFAULT_ADDRESS) {
  * worth understanding: it saves retyping the act on every poster. An explicit
  * location still wins, because it is the field that was meant for the venue.
  */
-export function splitTitle(summary) {
+export function splitTitle(summary, venue = '') {
   const raw = String(summary || '').trim()
+  // When the location already names the venue, the title only has to give up
+  // the act, so any way of writing it is safe to understand: "Trio at Joe's
+  // Pub", "Trio - Joe's Pub", "Trio live at Joe's Pub". Without that anchor,
+  // "at" is far too common in band names to split on.
+  if (venue) {
+    const escaped = venue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const tail = new RegExp(
+      `^(.*?)(?:\\s*(?:@|[-–—|·:])\\s*|\\s+(?:live\\s+)?at\\s+)${escaped}\\s*$`,
+      'i'
+    )
+    const found = raw.match(tail)
+    if (found && found[1].trim()) return { act: found[1].trim(), venue }
+  }
   const at = raw.match(/^(.*?)\s+[@]\s+(.*)$/)
   if (at) return { act: at[1].trim(), venue: at[2].trim() }
   return { act: raw, venue: '' }
@@ -149,8 +162,8 @@ export function splitTitle(summary) {
  */
 export function cardFor(event, now = new Date(), address = DEFAULT_ADDRESS) {
   const start = eventStart(event) || new Date()
-  const titled = splitTitle(event.summary)
   const located = parseLocation(event.location)
+  const titled = splitTitle(event.summary, located.venue)
   const allDay = isAllDay(event)
 
   const today = isSameDay(start, now)

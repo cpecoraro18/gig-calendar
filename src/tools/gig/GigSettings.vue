@@ -16,16 +16,17 @@ function choose(id) {
 
 <template>
   <label class="field">
-    <span class="label">Gigs calendar</span>
+    <span class="label">Website calendar</span>
     <select :value="chosen" @change="choose($event.target.value)">
-      <option value="">Not set up</option>
+      <option value="">None — I don't have one</option>
       <option v-for="calendar in writableCalendars" :key="calendar.id" :value="calendar.id">
         {{ calendar.summary }}
       </option>
     </select>
     <span class="hint muted">
-      The calendar your website reads. Publishing a gig writes an event
-      here; nothing else in this app touches it.
+      Optional. If your website lists gigs from a Google Calendar, choose it
+      here and every event gets a button to put it on the site. Nothing else
+      in this app writes to it.
     </span>
   </label>
 </template>

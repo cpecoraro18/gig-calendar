@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f1216" />
     <meta
       name="description"
-      content="A calendar console for your Google calendars, with the gig publisher built in."
+      content="A phone-first calendar for gigging musicians: your Google calendars, plus posts for your gigs."
     />
 
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -19,9 +19,22 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Calendar" />
+    <meta name="apple-mobile-web-app-title" content="Gigs" />
 
-    <title>Calendar</title>
+    <!-- Resolves the theme before the first paint, so a phone in light mode
+         doesn't flash dark while the bundle loads. src/lib/theme.js owns it
+         from then on; the key has to match. -->
+    <script>
+      try {
+        var saved = JSON.parse(localStorage.getItem('app.theme') || 'null')
+        var light =
+          saved === 'light' ||
+          (saved !== 'dark' && matchMedia('(prefers-color-scheme: light)').matches)
+        document.documentElement.dataset.theme = light ? 'light' : 'dark'
+      } catch (e) {}
+    </script>
+
+    <title>Gig Calendar</title>
   </head>
   <body>
     <div id="app"></div>

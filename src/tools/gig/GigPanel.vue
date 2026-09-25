@@ -111,7 +111,7 @@ function remove() {
 </script>
 
 <template>
-  <SheetModal title="Publish as a gig" label="Gig listing" @close="emit('close')">
+  <SheetModal title="Publish to website" label="Gig listing" @close="emit('close')">
     <p class="intro muted">
       Creates a listing on <strong>{{ calendarName(state.calendarId) }}</strong
       >, the calendar your website reads. The date and time come from the event
